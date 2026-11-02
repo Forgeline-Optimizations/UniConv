@@ -48,6 +48,9 @@ source/combo/hint, `_output_dir()` delegates to `paths.output_dir_for(cfg)`, sav
 settings failures show in the status line instead of crashing. Tests in
 `tests/ui/test_main_window.py` use a `SlowConverter` family (blocks on an Event) for the
 busy/cancel cases; run with `QT_QPA_PLATFORM=offscreen`.
+Sprint 5 fix: `_on_finished` calls `thread.quit(); thread.wait()` before clearing state.
+Without it, closing the window (or a test tearing it down) right after a job destroyed a
+still-running QThread and Qt aborted the process (seen once on Windows CI).
 
 ## Known issues / deliberate shortcuts
 - Single file per job in the UI; batch is a later UI-only change.

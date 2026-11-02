@@ -71,19 +71,17 @@ needed.
   is validated by that converter's `Options`. The app writes `config.defaults.json` at start
   as a reference; users override keys in `config.json`.
 
-## Current Sprint: Sprint 5 - "Release"
-**Goal:** tagging `v*` builds a Windows installer and a macOS arm64 DMG in CI, smoke-tests
-both, and publishes a GitHub release with licenses. Covers plan phase "Fase 5".
+## Current Sprint: none - v1 feature-complete (plan steps 1-37 done)
+**State:** CI green on Windows + macOS; the `release` workflow dry run (workflow_dispatch)
+built, smoke-tested and packaged both installers (run 41538628187).
 
-**Tasks (plan step in brackets):**
-- [ ] `packaging/uniconv.spec` + icons: PyInstaller onedir, `UniConv.app` with version (28) - packaging
-- [ ] `packaging/windows/installer.iss`: per-user, fixed AppId (29) - packaging
-- [ ] `packaging/macos/build_dmg.sh`: ad-hoc signing + DMG (30) - packaging
-- [ ] `THIRD_PARTY_LICENSES.md` (31) - root
-- [ ] `.github/workflows/release.yml`: build, smoke test, release; audit Inno Setup on runner (32) - root
-- [ ] README: install, warnings, paths, config, development (33) - root
+**Open, needs the maintainer:**
+- [ ] Open the DMG on a real Apple Silicon Mac and try drag & drop (review #18).
+- [ ] Try the Windows installer by hand (install, upgrade over itself, uninstall).
+- [ ] Publish: `git tag v0.1.0 && git push origin v0.1.0` (tag must equal `uniconv.__version__`).
 
-**Blockers / open decisions:** none. Code signing is out of scope (review #17).
+**Ideas after v1 (from the plan's extensibility table, not scheduled):** batch in the UI,
+per-conversion options generated from `Options.model_json_schema()`, multi-step routes.
 
 ## Milestone history
 - Sprint 0 - Project Initialization: memory workspace scaffolded from the plan. done
@@ -92,17 +90,18 @@ both, and publishes a GitHub release with licenses. Covers plan phase "Fase 5".
 - Sprint 2 - UI (steps 15-19, 37): done 2026-11-02.
 - Sprint 3 - Data and documents (steps 20-25): done 2026-11-02.
 - Sprint 4 - Audio and video (steps 26-27): done 2026-11-02.
+- Sprint 5 - Packaging and release (steps 28-33): done 2026-11-02 (not yet tagged).
 
 ## Module map
 | Module | Responsibility | Sprint | Status |
 |--------|---------------|--------|--------|
-| `src/uniconv/` (root files) | Entry point, CLI, config, paths | 1 | In progress |
-| `src/uniconv/core` | Contracts, registry + detection, work dir, job runner, tool runner | 1 (tools.py: 3) | In progress |
-| `src/uniconv/converters` | One converter per family: image (1), data + document (3), media (4) | 1-4 | In progress |
-| `tests` | Unit, integration matrix, UI tests | 1-5 | In progress |
+| `src/uniconv/` (root files) | Entry point, CLI, config, paths | 1 | Done |
+| `src/uniconv/core` | Contracts, registry + detection, work dir, job runner, tool runner | 1 (tools.py: 3) | Done |
+| `src/uniconv/converters` | One converter per family: image (1), data + document (3), media (4) | 1-4 | Done |
+| `tests` | Unit, integration matrix, UI tests | 1-5 | Done |
 | `src/uniconv/ui` | PySide6 window, drop zone, worker thread, bootstrap | 2 | Done |
 | `scripts` | `fetch_binaries.py`: pinned Pandoc/ffmpeg into `vendor/<tag>/` | 3 (audit in 1) | Done |
-| `packaging` | PyInstaller spec, Inno Setup, DMG script | 5 | Stub |
+| `packaging` | PyInstaller spec, Inno Setup, DMG script | 5 | Done |
 
 ## Conventions
 **Naming:** package `uniconv`, app name `UniConv`, CLI `uniconv`. Format keys are short
