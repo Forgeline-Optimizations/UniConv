@@ -1,0 +1,59 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "uniconv"
+version = "0.1.0"
+description = "Local desktop app that converts one file at a time within a format family."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "GPL-3.0-or-later"
+dependencies = [
+  "PySide6>=6.7",
+  "Pillow>=10.4",
+  "pillow-heif>=0.18",
+  "pandas>=2.2",
+  "openpyxl>=3.1",
+  "PyYAML>=6.0",
+  "tomli-w>=1.0",
+  "xmltodict>=0.13",
+  "filetype>=1.2",
+  "platformdirs>=4.2",
+  "pydantic>=2.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/Forgeline-Optimizations/UniConv"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.6"]
+build = ["pyinstaller>=6.6"]
+
+[project.scripts]
+uniconv = "uniconv.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/uniconv"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["vendor", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101"]  # assert is fine in tests
+
+[tool.ruff.lint.per-file-ignores]
+# Tests and dev scripts start helper processes on purpose; production code goes through core/tools.py.
+"tests/**" = ["S603", "S607", "S108"]
+"scripts/**" = ["S310"]
+"src/uniconv/core/tools.py" = ["S603"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "needs_pandoc: skipped when the pandoc binary is missing",
+  "needs_ffmpeg: skipped when the ffmpeg binary is missing",
+]

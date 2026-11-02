@@ -1,0 +1,7 @@
+# LF everywhere so shell scripts and the session hook run on macOS and in CI.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.iss text eol=crlf
+*.ico binary
+*.icns binary
+*.png binary
