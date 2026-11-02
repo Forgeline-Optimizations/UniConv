@@ -71,38 +71,30 @@ needed.
   is validated by that converter's `Options`. The app writes `config.defaults.json` at start
   as a reference; users override keys in `config.json`.
 
-## Current Sprint: Sprint 1 - "Core, images and CLI"
-**Goal:** `uniconv convert photo.heic --to png --out <dir>` works end to end on Windows and
-macOS, CI is green on both, and every image conversion in the registry passes the matrix test.
-Covers plan phases "Fase 0" and "Fase 1".
+## Current Sprint: Sprint 2 - "UI"
+**Goal:** `uniconv` without arguments opens a window: pick a family, drop one file, pick a
+target, convert, while the UI stays responsive. All choices come from the registry.
+Covers plan phase "Fase 2".
 
 **Tasks (plan step in brackets):**
-- [ ] Start the binary sourcing audit first, in parallel: pick + pin Pandoc and a static GPL ffmpeg for win32-x86_64 and darwin-arm64; record URLs, versions, sha256 (step 21 Audit) - scripts
-- [ ] `pyproject.toml` (1), `.gitignore`, `LICENSE` GPL-3.0, README stub (2) - root
-- [ ] `src/uniconv/__init__.py` + `__main__.py` with `--version` (3) - package root
-- [ ] `config.py`: `AppConfig`, `load_config`, `save_user_overrides`, `write_reference_copy` (4) - package root
-- [ ] `paths.py`: config file, work dir, default output dir (5) - package root
-- [ ] `.github/workflows/ci.yml`, Windows + macOS matrix (6) - root
-- [ ] `core/errors.py` (7), `core/converter.py` (8), `core/registry.py` incl. detection (9) - core
-- [ ] `core/workspace.py` with `os.replace` finalize and readable `OSError`s (10) - core
-- [ ] `core/jobs.py` with `Job`, `ItemResult`, `JobRunner` (11) - core
-- [ ] `converters/image.py` with `_normalize_mode`, ICC rule, megapixel limit (12) - converters
-- [ ] `cli.py` (13) and CLI branch in `__main__.py` (14) - package root
-- [ ] `tests/conftest.py` (34), unit tests (35), integration `test_matrix.py`, `test_jobs.py`, `test_image.py` (36) - tests
-- [ ] Audit: verify the MIME strings `filetype` returns for each image format (step 9 Audit) - core
+- [ ] `ui/drop_zone.py` (15) - ui
+- [ ] `ui/worker.py`: `JobWorker` on a `QThread` (16) - ui
+- [ ] `ui/main_window.py`, inputs disabled while busy (review #10) (17) - ui
+- [ ] `ui/app.py`: bootstrap, logging, option validation at start (18) - ui
+- [ ] GUI branch + `-psn_` filter in `__main__.py` (19) - package root
+- [ ] `tests/ui/test_main_window.py` (37) - tests
 
-**Blockers / open decisions:** none. Assumption: the macOS-arm64 ffmpeg audit may fail;
-then media ships later and nothing in Sprint 1 changes.
+**Blockers / open decisions:** none.
 
 ## Milestone history
 - Sprint 0 - Project Initialization: memory workspace scaffolded from the plan. done
+- Sprint 1 - Core, images and CLI (steps 1-14, 34-36, audits 9 + 21): done 2026-11-02.
+  Binary sources pinned in [ADR-001](.claude/decisions/ADR-001-pinned-binary-sources.md).
 
-## Sprint 2 preview
-- PySide6 UI: `ui/drop_zone.py`, `ui/worker.py`, `ui/main_window.py`, `ui/app.py` (steps 15-18)
-- GUI branch + `-psn_` filter in `__main__.py` (step 19)
-- All inputs disabled while a job runs (review #10); progress bar indeterminate until reported
-- pytest-qt tests (step 37)
-- Keep the core API stable: the UI only uses `Registry`, `Job`, `JobRunner`, `CancelToken`.
+## Sprint 3 preview
+- `core/tools.py` (20), `scripts/fetch_binaries.py` from ADR-001 (21), CI fetch + cache +
+  macOS `otool -L` check (22), `converters/data.py` (23), `converters/document.py` (24),
+  register both (25), `test_tools.py`, `test_data.py`, `test_document.py`.
 
 ## Module map
 | Module | Responsibility | Sprint | Status |
