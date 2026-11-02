@@ -57,7 +57,8 @@ Additions beyond the plan: `Registry.converter(family)` (CLI/UI need `sources()`
 `Registry.format()` raises `UnsupportedFormatError` for unknown keys, `detect()` prefers the
 format whose extension matches when several share a MIME (MP4/M4A), the runner fails with a
 readable error if a converter wrote no file, `ConversionContext.warn()` de-duplicates.
-`tools.py` is next (Sprint 3).
+`tools.py` done (Sprint 3): adds `bundled_bin_dir()` (patch point for tests), turns a
+failed `Popen` (missing exe) into `ConversionError`. Registry now holds image, data, document.
 
 ## Known issues / deliberate shortcuts
 - Image MIME strings are verified by `tests/unit/test_detect.py::test_filetype_mime_matches_declared_format`;

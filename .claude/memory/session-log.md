@@ -6,6 +6,24 @@
 
 ---
 
+## Sprint 3 - Session 1
+**Date:** 2026-11-02
+**Goal:** Data and documents (plan steps 20-25) plus their tests.
+**Completed:**
+- `core/tools.py`, `scripts/fetch_binaries.py` (ADR-001 manifest, staged extract, licenses),
+  CI fetch + cache + macOS `otool -L` guard; actions bumped to checkout@v7,
+  setup-python@v7, cache@v6 (Node 20 deprecation warnings).
+- `converters/data.py`, `converters/document.py`, both registered.
+- Tests: `test_tools.py`, `test_data.py` (#5, #8), `test_document.py` (#11), MIME audit
+  extended to xlsx/docx/odt/epub/rtf. 238 passed locally.
+**Decisions made:** none beyond the plan (small hardening listed in converters/CLAUDE.md).
+**Left unfinished:** nothing in scope.
+**Notes for next session:** running downloaded binaries by hand was refused by the
+auto-mode sandbox, but running them through pytest works. `vendor/win32-x86_64` is fetched
+locally (Pandoc 3.13, ffmpeg 9.0.2).
+
+---
+
 ## Sprint 2 - Session 1
 **Date:** 2026-11-02
 **Goal:** PySide6 UI (plan steps 15-19, 37).

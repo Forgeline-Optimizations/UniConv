@@ -9,14 +9,28 @@ jobs:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
       - run: pip install -e ".[dev]"
-      # step 22 adds: cache vendor/ + python scripts/fetch_binaries.py
+      - uses: actions/cache@v6
+        with:
+          path: vendor
+          key: vendor-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/fetch_binaries.py') }}
+      - run: python scripts/fetch_binaries.py
+      - name: ffmpeg links only system libraries (ADR-001)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          for b in vendor/darwin-arm64/ffmpeg vendor/darwin-arm64/ffprobe; do
+            otool -L "$b"
+            if otool -L "$b" | tail -n +2 | grep -vE '^\s*(/usr/lib/|/System/)'; then
+              echo "::error::$b links a non-system library"; exit 1
+            fi
+          done
       - run: ruff check .
-      - run: pytest -q
+      - run: pytest -q -rs
         env:
           QT_QPA_PLATFORM: offscreen  # pytest-qt without a display

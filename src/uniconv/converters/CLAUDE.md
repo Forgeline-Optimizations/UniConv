@@ -4,7 +4,7 @@
 using a proven engine. Each converter declares its own formats (with MIME types) and its
 own pydantic `Options`. It does NOT detect formats, choose output folders or touch any
 path other than `ctx.output_path`.
-**Sprint:** image 1, data + document 3, media 4 - Status: In progress (image)
+**Sprint:** image 1, data + document 3, media 4 - Status: image, data, document done
 
 ## Interface
 Each module exposes one `Converter` subclass plus its options model:
@@ -43,9 +43,17 @@ Adding a family: new file here + one line in `build_default_registry()`. Nothing
 - **Consumed by:** `uniconv.core.registry.build_default_registry()`.
 
 ## Current state
-`image.py` done (Sprint 1). Gotcha found: Pillow writers fall back to `img.info["icc_profile"]`,
-so `convert()` pops it from `img.info` and passes it explicitly only when kept. `data.py`, `document.py` and
-`media.py` follow in Sprints 3 and 4 exactly as specified in the plan.
+`image.py` (Sprint 1), `data.py` and `document.py` (Sprint 3) done; `media.py` is Sprint 4.
+Gotchas found:
+- Pillow writers fall back to `img.info["icc_profile"]`; `convert()` pops it from `img.info`.
+- Data: CSV is read as text first, then `_infer_types` makes columns numeric only when no
+  value has a leading zero ("007" postcodes survive), empty cells become null. Delimiter is
+  sniffed with `csv.Sniffer` over `,;	|`, fallback `,`. Lists/dicts left in cells after
+  `json_normalize` are written as JSON text. XML output: keys sanitised to valid names (with
+  a warning), booleans as "true"/"false", and `{"rows": [...]}` is wrapped in `root`.
+- Document: input goes after `--` so a file name can never be read as an option. EPUB
+  gets a default title through `--metadata-file` in the work dir, so a document's own
+  title still wins (plain `--metadata` would override it).
 
 ## Known issues / deliberate shortcuts
 - One default quality per target; per-conversion options come later via

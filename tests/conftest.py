@@ -1,18 +1,59 @@
 """Shared fixtures. Samples are generated per test; the repo holds no binary test files."""
 
+import json
+import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
+import pandas as pd
 import pytest
 from PIL import Image
 
 from uniconv.config import AppConfig, PathsConfig
 from uniconv.core.jobs import JobRunner
 from uniconv.core.registry import Registry, build_default_registry
+from uniconv.core.tools import find_tool
 from uniconv.core.workspace import Workspace
 
+RECORDS = [
+    {"id": 1, "naam": "Zoë", "adres": {"stad": "Delft", "postcode": "2611"}},
+    {"id": 2, "naam": "Jürgen", "adres": {"stad": "Gent", "postcode": "9000"}},
+]
+_TEXT_SAMPLES = {
+    "json": json.dumps(RECORDS, ensure_ascii=False, indent=2),
+    "yaml": (
+        "- id: 1\n  naam: Zoë\n  adres: {stad: Delft}\n"
+        "- id: 2\n  naam: Jürgen\n  adres: {stad: Gent}\n"
+    ),
+    "toml": '[[rows]]\nid = 1\nnaam = "Zoë"\n\n[[rows]]\nid = 2\nnaam = "Jürgen"\n',
+    "xml": (
+        "<?xml version='1.0' encoding='utf-8'?>\n"
+        "<root><row><id>1</id><naam>Zoë</naam></row>"
+        "<row><id>2</id><naam>Jürgen</naam></row></root>\n"
+    ),
+    "csv": "id,naam,stad\n1,Zoë,Delft\n2,Jürgen,Gent\n",
+    "md": "# Titel\n\nTekst met *nadruk* en een [link](https://example.org).\n",
+    "html": (
+        "<!DOCTYPE html><html><head><title>T</title></head><body><h1>Titel</h1>"
+        "<p>Tekst met <em>nadruk</em>.</p></body></html>\n"
+    ),
+    "tex": (
+        r"\documentclass{article}" "\n" r"\begin{document}" "\n"
+        r"\section{Titel}" "\nTekst.\n" r"\end{document}" "\n"
+    ),
+    "rtf": r"{\rtf1\ansi{\b Titel}\par Tekst met nadruk.\par}" "\n",
+}
+_PANDOC_SAMPLES = {"docx", "odt", "epub"}
 _PIL_FORMAT = {"jpg": "JPEG", "png": "PNG", "webp": "WEBP", "gif": "GIF", "bmp": "BMP",
                "tiff": "TIFF", "heic": "HEIF"}
+
+
+def pytest_collection_modifyitems(config, items):
+    missing = {name: find_tool(name) is None for name in ("pandoc", "ffmpeg")}
+    for item in items:
+        for name, absent in missing.items():
+            if absent and item.get_closest_marker(f"needs_{name}"):
+                item.add_marker(pytest.mark.skip(reason=f"{name} not found (fetch_binaries.py)"))
 
 
 @pytest.fixture
@@ -58,6 +99,11 @@ def make_image(path: Path, key: str, size: tuple[int, int] = (32, 24),
     return path
 
 
+def run_pandoc(*args: str) -> None:
+    subprocess.run([str(find_tool("pandoc")), *args], check=True, timeout=60,
+                   capture_output=True)
+
+
 @pytest.fixture
 def make_sample(tmp_path: Path) -> Callable[..., Path]:
     samples = tmp_path / "samples"
@@ -68,6 +114,18 @@ def make_sample(tmp_path: Path) -> Callable[..., Path]:
         path = samples / f"{name}{ext}"
         if key in _PIL_FORMAT:
             return make_image(path, key, **kw)
+        if key in _TEXT_SAMPLES:
+            text = kw.get("text", _TEXT_SAMPLES[key])
+            path.write_text(text, encoding=kw.get("encoding", "utf-8"), newline="")
+            return path
+        if key == "xlsx":
+            pd.DataFrame(RECORDS).drop(columns="adres").to_excel(path, index=False)
+            return path
+        if key in _PANDOC_SAMPLES:
+            md = samples / f"{name}-src.md"
+            md.write_text(_TEXT_SAMPLES["md"], encoding="utf-8")
+            run_pandoc(str(md), "-o", str(path), "--metadata", "title=Voorbeeld")
+            return path
         raise KeyError(f"no sample generator for {key!r}")
 
     return _make

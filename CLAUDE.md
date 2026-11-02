@@ -71,18 +71,16 @@ needed.
   is validated by that converter's `Options`. The app writes `config.defaults.json` at start
   as a reference; users override keys in `config.json`.
 
-## Current Sprint: Sprint 3 - "Data and documents"
-**Goal:** the Data and Document families work in CLI and UI, with pinned Pandoc fetched in
-CI so Pandoc tests run instead of skipping. Covers plan phase "Fase 3".
+## Current Sprint: Sprint 4 - "Audio and video"
+**Goal:** the Audio/video family converts with the pinned ffmpeg on Windows and macOS,
+with progress and fast cancel. Covers plan phase "Fase 4".
 
 **Tasks (plan step in brackets):**
-- [ ] `core/tools.py`: `platform_tag`, `find_tool`, `run_tool` (20) - core
-- [ ] `scripts/fetch_binaries.py` with the ADR-001 manifest (21) - scripts
-- [ ] CI: cache `vendor/`, fetch binaries, macOS `otool -L` check (22) - root
-- [ ] `converters/data.py`: tables vs trees, encoding detection, XML unwrap (23) - converters
-- [ ] `converters/document.py`: Pandoc wrapper, embed implies standalone (24) - converters
-- [ ] Register data + document (25) - core
-- [ ] `needs_pandoc`/`needs_ffmpeg` skip hook, samples, `test_tools.py`, `test_data.py`, `test_document.py` - tests
+- [ ] `converters/media.py`: codec table, even dimensions (#2), `-sn -dn` (#6), VP9 speed
+  flags (#12), audio-only targets for audio sources, progress via `-progress pipe:1` (26) - converters
+- [ ] Audit: verify every encoder in the codec table exists in both pinned builds (26 Audit) - converters
+- [ ] Register `MediaConverter` (27) - core
+- [ ] Media samples (lavfi), `test_media.py`, real MP3 WrongFamily test - tests
 
 **Blockers / open decisions:** none.
 
@@ -91,10 +89,11 @@ CI so Pandoc tests run instead of skipping. Covers plan phase "Fase 3".
 - Sprint 1 - Core, images and CLI (steps 1-14, 34-36, audits 9 + 21): done 2026-11-02.
   Binary sources pinned in [ADR-001](.claude/decisions/ADR-001-pinned-binary-sources.md).
 - Sprint 2 - UI (steps 15-19, 37): done 2026-11-02.
+- Sprint 3 - Data and documents (steps 20-25): done 2026-11-02.
 
-## Sprint 4 preview
-- `converters/media.py` (26): ffmpeg codec table, even dimensions, `-sn -dn`, VP9 speed
-  flags, progress via `-progress pipe:1`; register (27); `test_media.py`.
+## Sprint 5 preview
+- PyInstaller spec (28), Inno Setup (29), DMG script (30), THIRD_PARTY_LICENSES.md (31),
+  release workflow (32), README (33).
 
 ## Module map
 | Module | Responsibility | Sprint | Status |
@@ -104,7 +103,7 @@ CI so Pandoc tests run instead of skipping. Covers plan phase "Fase 3".
 | `src/uniconv/converters` | One converter per family: image (1), data + document (3), media (4) | 1-4 | In progress |
 | `tests` | Unit, integration matrix, UI tests | 1-5 | In progress |
 | `src/uniconv/ui` | PySide6 window, drop zone, worker thread, bootstrap | 2 | Done |
-| `scripts` | `fetch_binaries.py`: pinned Pandoc/ffmpeg into `vendor/<tag>/` | 3 (audit in 1) | Stub |
+| `scripts` | `fetch_binaries.py`: pinned Pandoc/ffmpeg into `vendor/<tag>/` | 3 (audit in 1) | Done |
 | `packaging` | PyInstaller spec, Inno Setup, DMG script | 5 | Stub |
 
 ## Conventions

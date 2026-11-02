@@ -39,11 +39,12 @@ Full inventory with what each test proves: `docs/implementation-plan.md`, steps 
 - **Consumed by:** CI (`.github/workflows/ci.yml`, Windows + macOS).
 
 ## Current state
-Sprint 1 done: `conftest.py` (image samples only; extend `make_sample` per family),
-unit `test_config/registry/detect/workspace/layering`, integration `test_matrix`,
-`test_jobs`, `test_image`, `test_cli`. 113 tests green on Windows locally.
-`test_detect.py` uses a fake family for WrongFamilyError until media exists; the real
-MP3 test skips until then. Next: `needs_pandoc`/`needs_ffmpeg` skip hook (needs tools.py).
+Sprints 1-3 done. `make_sample` covers images, all data formats (text via `text=`/`encoding=`
+overrides, xlsx via pandas) and documents (md/html/tex/rtf as text; docx/odt/epub via
+Pandoc). Skip hook `pytest_collection_modifyitems` marks `needs_pandoc`/`needs_ffmpeg` tests
+as skipped when `find_tool()` finds nothing. Matrix: 122 pairs (image 43, data 30,
+document 49). 238 passed locally with `vendor/` fetched. Next: media samples via ffmpeg
+lavfi and `test_media.py` (Sprint 4).
 
 ## Known issues / deliberate shortcuts
 - No coverage target; the rule is one test per review fix plus the matrix.
