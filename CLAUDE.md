@@ -71,18 +71,18 @@ needed.
   is validated by that converter's `Options`. The app writes `config.defaults.json` at start
   as a reference; users override keys in `config.json`.
 
-## Current Sprint: Sprint 2 - "UI"
-**Goal:** `uniconv` without arguments opens a window: pick a family, drop one file, pick a
-target, convert, while the UI stays responsive. All choices come from the registry.
-Covers plan phase "Fase 2".
+## Current Sprint: Sprint 3 - "Data and documents"
+**Goal:** the Data and Document families work in CLI and UI, with pinned Pandoc fetched in
+CI so Pandoc tests run instead of skipping. Covers plan phase "Fase 3".
 
 **Tasks (plan step in brackets):**
-- [ ] `ui/drop_zone.py` (15) - ui
-- [ ] `ui/worker.py`: `JobWorker` on a `QThread` (16) - ui
-- [ ] `ui/main_window.py`, inputs disabled while busy (review #10) (17) - ui
-- [ ] `ui/app.py`: bootstrap, logging, option validation at start (18) - ui
-- [ ] GUI branch + `-psn_` filter in `__main__.py` (19) - package root
-- [ ] `tests/ui/test_main_window.py` (37) - tests
+- [ ] `core/tools.py`: `platform_tag`, `find_tool`, `run_tool` (20) - core
+- [ ] `scripts/fetch_binaries.py` with the ADR-001 manifest (21) - scripts
+- [ ] CI: cache `vendor/`, fetch binaries, macOS `otool -L` check (22) - root
+- [ ] `converters/data.py`: tables vs trees, encoding detection, XML unwrap (23) - converters
+- [ ] `converters/document.py`: Pandoc wrapper, embed implies standalone (24) - converters
+- [ ] Register data + document (25) - core
+- [ ] `needs_pandoc`/`needs_ffmpeg` skip hook, samples, `test_tools.py`, `test_data.py`, `test_document.py` - tests
 
 **Blockers / open decisions:** none.
 
@@ -90,11 +90,11 @@ Covers plan phase "Fase 2".
 - Sprint 0 - Project Initialization: memory workspace scaffolded from the plan. done
 - Sprint 1 - Core, images and CLI (steps 1-14, 34-36, audits 9 + 21): done 2026-11-02.
   Binary sources pinned in [ADR-001](.claude/decisions/ADR-001-pinned-binary-sources.md).
+- Sprint 2 - UI (steps 15-19, 37): done 2026-11-02.
 
-## Sprint 3 preview
-- `core/tools.py` (20), `scripts/fetch_binaries.py` from ADR-001 (21), CI fetch + cache +
-  macOS `otool -L` check (22), `converters/data.py` (23), `converters/document.py` (24),
-  register both (25), `test_tools.py`, `test_data.py`, `test_document.py`.
+## Sprint 4 preview
+- `converters/media.py` (26): ffmpeg codec table, even dimensions, `-sn -dn`, VP9 speed
+  flags, progress via `-progress pipe:1`; register (27); `test_media.py`.
 
 ## Module map
 | Module | Responsibility | Sprint | Status |
@@ -103,7 +103,7 @@ Covers plan phase "Fase 2".
 | `src/uniconv/core` | Contracts, registry + detection, work dir, job runner, tool runner | 1 (tools.py: 3) | In progress |
 | `src/uniconv/converters` | One converter per family: image (1), data + document (3), media (4) | 1-4 | In progress |
 | `tests` | Unit, integration matrix, UI tests | 1-5 | In progress |
-| `src/uniconv/ui` | PySide6 window, drop zone, worker thread, bootstrap | 2 | Upcoming |
+| `src/uniconv/ui` | PySide6 window, drop zone, worker thread, bootstrap | 2 | Done |
 | `scripts` | `fetch_binaries.py`: pinned Pandoc/ffmpeg into `vendor/<tag>/` | 3 (audit in 1) | Stub |
 | `packaging` | PyInstaller spec, Inno Setup, DMG script | 5 | Stub |
 

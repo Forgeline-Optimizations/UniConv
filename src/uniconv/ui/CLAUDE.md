@@ -4,11 +4,12 @@
 loss hint, output folder, convert/cancel, progress and status. It turns user actions into
 one `Job` and results into text. It does NOT contain conversion logic or know any format;
 everything comes from the `Registry`.
-**Sprint:** 2 - Status: Not yet started
+**Sprint:** 2 - Status: Done
 
 ## Interface
 - `app.py`: `run_gui() -> int` (called from `__main__.py` when there are no arguments).
-- `main_window.py`: `MainWindow(registry, runner, cfg)`.
+- `main_window.py`: `MainWindow(registry, runner, cfg, config_path=None)`; `config_path`
+  defaults to `paths.config_file()` and lets tests keep settings out of the real config.
 - `drop_zone.py`: `DropZone(QFrame)` with signal `file_chosen(Path)`,
   `set_extensions(label, extensions)`, `show_file(name, label)`.
 - `worker.py`: `JobWorker(QObject)` with signals `progress(float)` and `finished(list)`,
@@ -42,7 +43,11 @@ Full code per file: `docs/implementation-plan.md`, steps 15-19.
 - **Consumed by:** `uniconv.__main__`.
 
 ## Current state
-Not started. Requires the Sprint 1 core API to be stable.
+Sprint 2 done (steps 15-19, 37). Additions: `DropZone.reset()`, `_select_family()` resets
+source/combo/hint, `_output_dir()` delegates to `paths.output_dir_for(cfg)`, saving
+settings failures show in the status line instead of crashing. Tests in
+`tests/ui/test_main_window.py` use a `SlowConverter` family (blocks on an Event) for the
+busy/cancel cases; run with `QT_QPA_PLATFORM=offscreen`.
 
 ## Known issues / deliberate shortcuts
 - Single file per job in the UI; batch is a later UI-only change.

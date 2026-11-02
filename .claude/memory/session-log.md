@@ -6,6 +6,22 @@
 
 ---
 
+## Sprint 2 - Session 1
+**Date:** 2026-11-02
+**Goal:** PySide6 UI (plan steps 15-19, 37).
+**Completed:**
+- `ui/drop_zone.py`, `ui/worker.py`, `ui/main_window.py`, `ui/app.py`; GUI branch and
+  `-psn_` filter in `__main__.py`.
+- 8 pytest-qt tests incl. busy-state (#10), cancel, and settings-affect-next-job (#3).
+- Offscreen screenshot checked: layout and dark-mode palette render correctly.
+**Decisions made:** none
+**Left unfinished:** real drag & drop from Explorer/Finder only tested via the signal;
+try it manually once (`.venv/Scripts/python -m uniconv`).
+**Notes for next session:** `gh` CLI is installed and authenticated; use `gh run list` /
+`gh run watch` to confirm CI after each push.
+
+---
+
 ## Sprint 1 - Session 1
 **Date:** 2026-11-02
 **Goal:** Core, images and CLI (plan steps 1-14, 34-36, audits of steps 9 and 21).
