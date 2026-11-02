@@ -52,10 +52,15 @@ Full code per file: `docs/implementation-plan.md`, steps 7-11 and 20.
 - **Consumed by:** `uniconv.cli`, `uniconv.ui`, `uniconv.converters` (contracts + tools).
 
 ## Current state
-Nothing implemented yet. Build in plan order: errors -> converter -> registry ->
-workspace -> jobs. `build_default_registry()` registers only `ImageConverter` in Sprint 1.
+Sprint 1 done: errors, converter, registry, workspace, jobs implemented and tested.
+Additions beyond the plan: `Registry.converter(family)` (CLI/UI need `sources()`),
+`Registry.format()` raises `UnsupportedFormatError` for unknown keys, `detect()` prefers the
+format whose extension matches when several share a MIME (MP4/M4A), the runner fails with a
+readable error if a converter wrote no file, `ConversionContext.warn()` de-duplicates.
+`tools.py` is next (Sprint 3).
 
 ## Known issues / deliberate shortcuts
-- MIME strings per format must be verified against real `filetype` output (step 9 Audit).
+- Image MIME strings are verified by `tests/unit/test_detect.py::test_filetype_mime_matches_declared_format`;
+  extend the parametrize list when data/document/media formats arrive.
 - Changing `Image.MAX_IMAGE_PIXELS` or any other global state is avoided; jobs run one at
   a time in v1, but keep it that way for future batch work.
