@@ -100,9 +100,10 @@ def build_default_registry() -> Registry:
     from uniconv.converters.data import DataConverter
     from uniconv.converters.document import DocumentConverter
     from uniconv.converters.image import ImageConverter
+    from uniconv.converters.media import MediaConverter
 
     reg = Registry()
-    for conv in (ImageConverter(), DataConverter(), DocumentConverter()):
+    for conv in (ImageConverter(), DataConverter(), DocumentConverter(), MediaConverter()):
         if conv.available():
             reg.register(conv)
     return reg

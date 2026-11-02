@@ -104,6 +104,29 @@ def run_pandoc(*args: str) -> None:
                    capture_output=True)
 
 
+_MEDIA_AUDIO = {"mp3", "wav", "flac", "ogg", "m4a", "opus"}
+_MEDIA_VIDEO = {"mp4", "mkv", "webm", "mov"}
+
+
+def make_media(path: Path, key: str, seconds: float = 1, size: str = "64x64",
+               extra: tuple[str, ...] = (), inputs: tuple[str, ...] = (),
+               audio: bool = True, video: bool = True) -> Path:
+    """lavfi test sources; ffmpeg picks its default codecs for the container."""
+    cmd = [str(find_tool("ffmpeg")), "-hide_banner", "-nostdin", "-y", "-v", "error"]
+    if key in _MEDIA_VIDEO and video:
+        cmd += ["-f", "lavfi", "-i", f"testsrc=duration={seconds}:size={size}:rate=10"]
+    if audio or key in _MEDIA_AUDIO:
+        cmd += ["-f", "lavfi", "-i", f"sine=frequency=440:duration={seconds}"]
+    cmd += inputs  # extra inputs (e.g. subtitles) must precede all output options
+    if key in _MEDIA_VIDEO and video and "-c:v" not in extra:
+        cmd += ["-pix_fmt", "yuv420p"]
+    if key == "webm":
+        cmd += ["-deadline", "realtime", "-cpu-used", "8"]
+    cmd += [*extra, str(path)]
+    subprocess.run(cmd, check=True, timeout=120, capture_output=True)
+    return path
+
+
 @pytest.fixture
 def make_sample(tmp_path: Path) -> Callable[..., Path]:
     samples = tmp_path / "samples"
@@ -126,6 +149,8 @@ def make_sample(tmp_path: Path) -> Callable[..., Path]:
             md.write_text(_TEXT_SAMPLES["md"], encoding="utf-8")
             run_pandoc(str(md), "-o", str(path), "--metadata", "title=Voorbeeld")
             return path
+        if key in _MEDIA_AUDIO | _MEDIA_VIDEO:
+            return make_media(path, key, **kw)
         raise KeyError(f"no sample generator for {key!r}")
 
     return _make

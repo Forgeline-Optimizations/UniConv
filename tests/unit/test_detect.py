@@ -67,15 +67,22 @@ def test_target_only_format_is_refused_as_source(registry, tmp_path):
         registry.detect(f, "image")
 
 
+_MEDIA = ["mp3", "wav", "flac", "ogg", "m4a", "opus", "mp4", "mkv", "webm", "mov"]
+
+
 @pytest.mark.parametrize("key", ["jpg", "png", "webp", "gif", "bmp", "tiff", "heic", "xlsx",
-                                 "docx", "odt", "epub", "rtf"])
+                                 "docx", "odt", "epub", "rtf", *_MEDIA])
 def test_filetype_mime_matches_declared_format(registry, make_sample, key):
-    """Step 9 audit: the MIME string filetype returns must be listed in Format.mimes."""
+    """Step 9 audit: filetype's MIME must be declared, and detection must land on `key`."""
     import filetype
 
     if key in ("docx", "odt", "epub") and "document" not in dict(registry.families()):
         pytest.skip("pandoc missing")
+    if key in _MEDIA and "media" not in dict(registry.families()):
+        pytest.skip("ffmpeg missing")
     src = make_sample(key)
     kind = filetype.guess(str(src))
     assert kind is not None, f"filetype does not recognise {key}"
     assert kind.mime in registry.format(key).mimes
+    family = next(f for f, _ in registry.families() if key in registry.converter(f).sources())
+    assert registry.detect(src, family).key == key

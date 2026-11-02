@@ -39,12 +39,13 @@ Full inventory with what each test proves: `docs/implementation-plan.md`, steps 
 - **Consumed by:** CI (`.github/workflows/ci.yml`, Windows + macOS).
 
 ## Current state
-Sprints 1-3 done. `make_sample` covers images, all data formats (text via `text=`/`encoding=`
-overrides, xlsx via pandas) and documents (md/html/tex/rtf as text; docx/odt/epub via
-Pandoc). Skip hook `pytest_collection_modifyitems` marks `needs_pandoc`/`needs_ffmpeg` tests
-as skipped when `find_tool()` finds nothing. Matrix: 122 pairs (image 43, data 30,
-document 49). 238 passed locally with `vendor/` fetched. Next: media samples via ffmpeg
-lavfi and `test_media.py` (Sprint 4).
+Sprints 1-4 done. `make_sample` covers every format of every family; media samples come
+from `make_media()` (lavfi testsrc + sine; `inputs=` for extra inputs such as subtitles,
+`extra=` for output options, `audio=`/`video=` to drop a stream). Matrix: 188 pairs
+(image 43, data 30, document 49, media 66). 325 passed locally with `vendor/` fetched.
+The MIME audit test now also asserts `registry.detect()` lands on the sample's own key.
+`tests/` and its subfolders are packages (`__init__.py`) so `test_media.py` can import
+`make_media` from conftest.
 
 ## Known issues / deliberate shortcuts
 - No coverage target; the rule is one test per review fix plus the matrix.

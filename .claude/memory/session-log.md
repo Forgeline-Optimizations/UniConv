@@ -6,6 +6,22 @@
 
 ---
 
+## Sprint 4 - Session 1
+**Date:** 2026-11-02
+**Goal:** Audio/video family (plan steps 26-27).
+**Completed:**
+- `converters/media.py` with the plan's codec table and review fixes #2, #6, #12;
+  registered as the fourth family.
+- Encoder audit (step 26) is a test, so CI checks both pinned builds on every push.
+- `test_media.py`: odd 63x47 video (#2), MKV with subtitles (#6), MP4 to MP3 has no video,
+  progress rises monotonically, cancel within 1 s with nothing left behind, readable errors
+  for silent video to MP3 and corrupt input. Real MP3 WrongFamily test now runs.
+**Decisions made:** none (hardening beyond the plan noted in converters/CLAUDE.md).
+**Left unfinished:** nothing in scope.
+**Notes for next session:** 325 tests take ~35 s locally; media pairs dominate.
+
+---
+
 ## Sprint 3 - Session 1
 **Date:** 2026-11-02
 **Goal:** Data and documents (plan steps 20-25) plus their tests.

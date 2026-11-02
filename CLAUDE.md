@@ -71,18 +71,19 @@ needed.
   is validated by that converter's `Options`. The app writes `config.defaults.json` at start
   as a reference; users override keys in `config.json`.
 
-## Current Sprint: Sprint 4 - "Audio and video"
-**Goal:** the Audio/video family converts with the pinned ffmpeg on Windows and macOS,
-with progress and fast cancel. Covers plan phase "Fase 4".
+## Current Sprint: Sprint 5 - "Release"
+**Goal:** tagging `v*` builds a Windows installer and a macOS arm64 DMG in CI, smoke-tests
+both, and publishes a GitHub release with licenses. Covers plan phase "Fase 5".
 
 **Tasks (plan step in brackets):**
-- [ ] `converters/media.py`: codec table, even dimensions (#2), `-sn -dn` (#6), VP9 speed
-  flags (#12), audio-only targets for audio sources, progress via `-progress pipe:1` (26) - converters
-- [ ] Audit: verify every encoder in the codec table exists in both pinned builds (26 Audit) - converters
-- [ ] Register `MediaConverter` (27) - core
-- [ ] Media samples (lavfi), `test_media.py`, real MP3 WrongFamily test - tests
+- [ ] `packaging/uniconv.spec` + icons: PyInstaller onedir, `UniConv.app` with version (28) - packaging
+- [ ] `packaging/windows/installer.iss`: per-user, fixed AppId (29) - packaging
+- [ ] `packaging/macos/build_dmg.sh`: ad-hoc signing + DMG (30) - packaging
+- [ ] `THIRD_PARTY_LICENSES.md` (31) - root
+- [ ] `.github/workflows/release.yml`: build, smoke test, release; audit Inno Setup on runner (32) - root
+- [ ] README: install, warnings, paths, config, development (33) - root
 
-**Blockers / open decisions:** none.
+**Blockers / open decisions:** none. Code signing is out of scope (review #17).
 
 ## Milestone history
 - Sprint 0 - Project Initialization: memory workspace scaffolded from the plan. done
@@ -90,10 +91,7 @@ with progress and fast cancel. Covers plan phase "Fase 4".
   Binary sources pinned in [ADR-001](.claude/decisions/ADR-001-pinned-binary-sources.md).
 - Sprint 2 - UI (steps 15-19, 37): done 2026-11-02.
 - Sprint 3 - Data and documents (steps 20-25): done 2026-11-02.
-
-## Sprint 5 preview
-- PyInstaller spec (28), Inno Setup (29), DMG script (30), THIRD_PARTY_LICENSES.md (31),
-  release workflow (32), README (33).
+- Sprint 4 - Audio and video (steps 26-27): done 2026-11-02.
 
 ## Module map
 | Module | Responsibility | Sprint | Status |

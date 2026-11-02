@@ -4,7 +4,7 @@
 using a proven engine. Each converter declares its own formats (with MIME types) and its
 own pydantic `Options`. It does NOT detect formats, choose output folders or touch any
 path other than `ctx.output_path`.
-**Sprint:** image 1, data + document 3, media 4 - Status: image, data, document done
+**Sprint:** image 1, data + document 3, media 4 - Status: all four families done
 
 ## Interface
 Each module exposes one `Converter` subclass plus its options model:
@@ -43,7 +43,7 @@ Adding a family: new file here + one line in `build_default_registry()`. Nothing
 - **Consumed by:** `uniconv.core.registry.build_default_registry()`.
 
 ## Current state
-`image.py` (Sprint 1), `data.py` and `document.py` (Sprint 3) done; `media.py` is Sprint 4.
+`image.py` (Sprint 1), `data.py` and `document.py` (Sprint 3), `media.py` (Sprint 4) done.
 Gotchas found:
 - Pillow writers fall back to `img.info["icc_profile"]`; `convert()` pops it from `img.info`.
 - Data: CSV is read as text first, then `_infer_types` makes columns numeric only when no
@@ -54,6 +54,11 @@ Gotchas found:
 - Document: input goes after `--` so a file name can never be read as an option. EPUB
   gets a default title through `--metadata-file` in the work dir, so a document's own
   title still wins (plain `--metadata` would override it).
+- Media: one ffprobe call (JSON) gives duration plus stream types; album art
+  (`attached_pic`) does not count as video. Audio target without audio stream fails with a
+  Dutch message; video target without video stream drops the x264/VP9 args and warns.
+  Opus declares `audio/ogg` too, and detection prefers the format whose extension matches.
+  `-map_metadata 0` keeps tags. Encoders are audited by `test_media.py::test_required_encoders_present`.
 
 ## Known issues / deliberate shortcuts
 - One default quality per target; per-conversion options come later via
