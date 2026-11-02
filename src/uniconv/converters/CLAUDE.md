@@ -43,7 +43,8 @@ Adding a family: new file here + one line in `build_default_registry()`. Nothing
 - **Consumed by:** `uniconv.core.registry.build_default_registry()`.
 
 ## Current state
-Nothing implemented yet. Sprint 1: `image.py` only. `data.py`, `document.py` and
+`image.py` done (Sprint 1). Gotcha found: Pillow writers fall back to `img.info["icc_profile"]`,
+so `convert()` pops it from `img.info` and passes it explicitly only when kept. `data.py`, `document.py` and
 `media.py` follow in Sprints 3 and 4 exactly as specified in the plan.
 
 ## Known issues / deliberate shortcuts
