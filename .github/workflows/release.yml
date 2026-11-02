@@ -1,0 +1,122 @@
+name: release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:  # build + smoke test + package without publishing (dry run)
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]  # macos-latest = Apple Silicon
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install ".[build]"
+
+      - name: Version from tag must match the package
+        id: version
+        run: |
+          PKG=$(python -c "import uniconv; print(uniconv.__version__)")
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            [ "${GITHUB_REF_NAME#v}" = "$PKG" ] || { echo "::error::tag $GITHUB_REF_NAME != $PKG"; exit 1; }
+          fi
+          echo "version=$PKG" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v6
+        with:
+          path: vendor
+          key: vendor-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/fetch_binaries.py') }}
+      - run: python scripts/fetch_binaries.py
+      - run: pyinstaller packaging/uniconv.spec --noconfirm --distpath dist --workpath build
+
+      # The frozen app is tested, not the source: a forgotten library or a wrong binary
+      # path only shows up here. A windowed exe may have no stdout, so check files.
+      - name: Smoke test the frozen app
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then BIN=dist/UniConv/UniConv.exe; else BIN=dist/UniConv.app/Contents/MacOS/UniConv; fi
+          mkdir -p smoke && cd smoke
+          python -c "from PIL import Image; Image.new('RGBA', (8, 8), (255, 0, 0, 128)).save('smoke.png')"
+          python -c "import wave; w = wave.open('smoke.wav', 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(8000); w.writeframes(bytes(16000)); w.close()"
+          printf 'id,naam\n1,Zoë\n' > smoke.csv
+          printf '# Titel\n\nTekst.\n' > smoke.md
+          "../$BIN" convert smoke.png --to jpg --out out
+          "../$BIN" convert smoke.csv --to xlsx --out out
+          "../$BIN" convert smoke.md --to docx --out out
+          for f in out/smoke.jpg out/smoke.xlsx out/smoke.docx; do test -s "$f" || { echo "::error::missing $f"; exit 1; }; done
+          # skip the media check when this platform shipped without ffmpeg (ADR-001 fallback)
+          if ls ../vendor/*/ffmpeg* >/dev/null 2>&1; then
+            "../$BIN" convert smoke.wav --to mp3 --out out
+            test -s out/smoke.mp3 || { echo "::error::missing out/smoke.mp3"; exit 1; }
+          fi
+          # The window must start and keep running (missing Qt plugins crash at start-up).
+          QT_QPA_PLATFORM=offscreen python - "../$BIN" <<'EOF'
+          import subprocess, sys
+          p = subprocess.Popen([sys.argv[1]])
+          try:
+              code = p.wait(10)
+          except subprocess.TimeoutExpired:
+              p.kill()
+              print("GUI still running after 10 s: OK")
+          else:
+              sys.exit(f"GUI exited early with code {code}")
+          EOF
+
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+            $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          }
+          & $iscc "/DAppVersion=${{ steps.version.outputs.version }}" packaging\windows\installer.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: bash packaging/macos/build_dmg.sh "${{ steps.version.outputs.version }}"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: uniconv-${{ runner.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+          if-no-files-found: error
+
+  publish:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            dist/*.exe
+            dist/*.dmg
+          fail_on_unmatched_files: true
+          body: |
+            Downloads:
+            - **Windows 10/11 (x64):** `UniConv-*-windows-x86_64-setup.exe`
+            - **macOS 12+ (Apple Silicon):** `UniConv-*-macos-arm64.dmg`
+
+            The app is not code-signed. See the README for the one-time SmartScreen and
+            Gatekeeper steps. Third-party licenses: `THIRD_PARTY_LICENSES.md`.

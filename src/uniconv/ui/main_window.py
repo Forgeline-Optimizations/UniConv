@@ -271,6 +271,11 @@ class MainWindow(QMainWindow):
 
     @Slot(list)
     def _on_finished(self, results: list[ItemResult]) -> None:
+        if self._thread is not None:
+            # The worker has returned, but the thread may still be winding down. Destroying
+            # a running QThread (e.g. closing the window right now) aborts the process.
+            self._thread.quit()
+            self._thread.wait()
         self._worker = None
         self._thread = None
         self._set_busy(False)
