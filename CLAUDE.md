@@ -84,7 +84,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 - [x] 4 `core/registry.py`: providers per family, weak MIMEs, `hints()` (#6, #13)
 - [x] 5 `core/jobs.py`, `cli.py`, `ui/main_window.py`, `ui/app.py`: new registry API
 - [x] 6 `core/isolate.py`: `run_isolated()` (#3)
-- [ ] 7 `core/apps.py`: `find_app()` for LibreOffice and Chrome/Edge
+- [x] 7 `core/apps.py`: `find_app()` for LibreOffice and Chrome/Edge
 
 **Phase 1 - PDF from images and text**
 - [ ] 8 `pyproject.toml`, `__init__.py`: 0.2.0 and new dependencies
