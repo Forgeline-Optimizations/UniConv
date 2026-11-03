@@ -1,6 +1,6 @@
 import pytest
 
-from uniconv import cli
+from uniconv import __version__, cli
 from uniconv.__main__ import main
 
 
@@ -23,7 +23,7 @@ def test_main_calls_freeze_support_first(monkeypatch, capsys):
 
 def test_version(capsys):
     assert main(["--version"]) == 0
-    assert capsys.readouterr().out.strip() == "0.1.0"
+    assert capsys.readouterr().out.strip() == __version__
 
 
 def test_formats_lists_image_family(capsys):

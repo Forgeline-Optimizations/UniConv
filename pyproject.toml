@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uniconv"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local desktop app that converts one file at a time within a format family."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -21,13 +21,21 @@ dependencies = [
   "filetype>=1.2",
   "platformdirs>=4.2",
   "pydantic>=2.7",
+  "img2pdf>=0.6.3",     # lossless image -> PDF; pulls in pikepdf (MPL-2.0)
+  "vtracer>=0.6.15",    # raster -> SVG tracing
+  "trimesh>=5.2",       # 3D formats
+  "scipy>=1.13",        # trimesh needs it for OBJ/GLB normals
+  "networkx>=3.3",      # trimesh: 3MF and scene graphs
+  "lxml>=5.2",          # trimesh: 3MF
 ]
 
 [project.urls]
 Homepage = "https://github.com/Forgeline-Optimizations/UniConv"
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.6"]
+dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.6",
+       "pypdfium2>=5.9",          # render PDFs in tests to check pixels
+       "msoffcrypto-tool>=5.4"]   # make a password-protected .docx in tests
 build = ["pyinstaller>=6.6"]
 
 [project.scripts]

@@ -21,6 +21,7 @@
 - Step 6 (core/isolate.py): run_isolated with spawn, cancel, time-out, crash detection (also EOF without answer) (#3); tests: test_isolate.py (6) + _isolate_targets.py added, passed 3x in a row
 - Step 7 (core/apps.py): find_app with env override, install dirs, PATH; tests: test_apps.py (6 + 2 CI-only audit tests); locally Chrome found, no LibreOffice
 - Phase 0 done: registry with providers, run_isolated, find_app, freeze_support; 349 passed per OS, step 7 browser audit passed on both runners; CI green https://github.com/Forgeline-Optimizations/UniConv/actions/runs/41554296346
+- Step 8 (pyproject.toml, __init__.py): version 0.2.0; img2pdf, vtracer, trimesh, scipy, networkx, lxml; dev pypdfium2, msoffcrypto-tool (installed: trimesh 5.2.0, vtracer 0.6.15, img2pdf 0.6.3, pikepdf 10.17); tests: test_version reads __version__, full suite passed
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 **Left unfinished:** Phases 1-5 (steps 8-29).
