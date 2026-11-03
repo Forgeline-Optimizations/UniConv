@@ -41,6 +41,7 @@
 - Phase 4 done: 3D family (trimesh in run_isolated), 42 matrix pairs; UI tests of step 29 added; 494 passed per OS; CI green https://github.com/Forgeline-Optimizations/UniConv/actions/runs/41559722856
 - Step 20 (packaging/uniconv.spec): collect_data_files('trimesh'), packaging/licenses, LSMinimumSystemVersion 14.0 (#8); local Windows build OK (typst/resvg in bin, trimesh resources present); frozen smoke test: md->pdf, png->pdf, svg->png, png->svg (spawn child), stl->glb (spawn child) all OK, no runaway UniConv processes
 - Step 21 (packaging/licenses/resvg-LICENSE-{MIT,APACHE}.txt from tag v0.49.0, THIRD_PARTY_LICENSES.md): Typst, resvg, img2pdf, pikepdf (+qpdf), vtracer, trimesh, SciPy, NetworkX, lxml with versions and checked source links; 'Detected, not bundled' section for LibreOffice/Chrome/Edge (#20)
+- Step 22 (.github/workflows/ci.yml): otool -L guard covers ffmpeg, ffprobe, typst, resvg; LibreOffice job (weekly + workflow_dispatch) was added early in phase 2 and is green on both OSes
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 - Step 9: palette frames become RGB/RGBA before img2pdf, and a frame's ICC profile is dropped when its colour space changed (same rule as the raster path, review #4).

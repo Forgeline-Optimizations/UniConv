@@ -25,11 +25,11 @@ jobs:
           path: vendor
           key: vendor-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/fetch_binaries.py') }}
       - run: python scripts/fetch_binaries.py
-      - name: ffmpeg links only system libraries (ADR-001)
+      - name: bundled binaries link only system libraries (ADR-001, ADR-002)
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          for b in vendor/darwin-arm64/ffmpeg vendor/darwin-arm64/ffprobe; do
+          for b in vendor/darwin-arm64/{ffmpeg,ffprobe,typst,resvg}; do
             otool -L "$b"
             if otool -L "$b" | tail -n +2 | grep -vE '^\s*(/usr/lib/|/System/)'; then
               echo "::error::$b links a non-system library"; exit 1
