@@ -10,6 +10,7 @@ import json
 import platform
 import shutil
 import sys
+import tarfile
 import tempfile
 import urllib.request
 import zipfile
@@ -19,15 +20,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PANDOC = "3.13"
 FFMPEG = "9.0.2"
+TYPST = "0.15.1"
+RESVG = "0.49.0"
 _RIEDL = "https://ffmpeg.martin-riedl.de/download/macos/arm64/1789931890_9.0.2"
+_TYPST = f"https://github.com/typst/typst/releases/download/v{TYPST}"
+_RESVG = f"https://github.com/linebender/resvg/releases/download/v{RESVG}"
 
 
 @dataclass(frozen=True)
 class Archive:
     url: str
     sha256: str
-    members: dict[str, str]                       # output name -> path inside the zip
-    licenses: dict[str, str] = field(default_factory=dict)  # licenses/<name> -> zip path
+    members: dict[str, str]                       # output name -> path inside the archive
+    licenses: dict[str, str] = field(default_factory=dict)  # licenses/<name> -> archive path
 
 
 MANIFEST: dict[str, list[Archive]] = {
@@ -48,6 +53,18 @@ MANIFEST: dict[str, list[Archive]] = {
             {"ffmpeg-LICENSE.txt": f"ffmpeg-{FFMPEG}-essentials_build/LICENSE",
              "ffmpeg-README.txt": f"ffmpeg-{FFMPEG}-essentials_build/README.txt"},
         ),
+        Archive(
+            f"{_TYPST}/typst-x86_64-pc-windows-msvc.zip",
+            "19ce3551153c2fe7ee9fa2f95208310c8f4d3209fedb699e0333faf8913f6736",
+            {"typst.exe": "typst-x86_64-pc-windows-msvc/typst.exe"},
+            {"typst-LICENSE.txt": "typst-x86_64-pc-windows-msvc/LICENSE",
+             "typst-NOTICE.txt": "typst-x86_64-pc-windows-msvc/NOTICE"},
+        ),
+        Archive(
+            f"{_RESVG}/resvg-win-x86_64.zip",
+            "38af9631b37e61118a32a5ef31e6be6af083eda63b4c17ffc4fdc63e449277df",
+            {"resvg.exe": "resvg.exe"},  # no license file inside: packaging/licenses/
+        ),
     ],
     "darwin-arm64": [
         Archive(
@@ -65,6 +82,18 @@ MANIFEST: dict[str, list[Archive]] = {
             f"{_RIEDL}/ffprobe.zip",
             "fcbe839537485eaee7a7a8bc5cbc0f90d53617e80943e8a5b2e31cb851197ea6",
             {"ffprobe": "ffprobe"},
+        ),
+        Archive(
+            f"{_TYPST}/typst-aarch64-apple-darwin.tar.xz",
+            "48f62ed034aa3a7978309579ac6ca00045e2ef0da73114e8af27cfd8e74dc05a",
+            {"typst": "typst-aarch64-apple-darwin/typst"},
+            {"typst-LICENSE.txt": "typst-aarch64-apple-darwin/LICENSE",
+             "typst-NOTICE.txt": "typst-aarch64-apple-darwin/NOTICE"},
+        ),
+        Archive(
+            f"{_RESVG}/resvg-macos-aarch64.zip",
+            "847acb5210c7c6244b5e8f07dd62fa1ce596108cce8193628ebfd5750504b259",
+            {"resvg": "resvg"},
         ),
     ],
 }
@@ -95,9 +124,17 @@ def download(url: str, dest: Path, expected: str) -> None:
                          f"  want {expected}")
 
 
-def extract(zip_path: Path, member: str, dest: Path) -> None:
-    with zipfile.ZipFile(zip_path) as zf, zf.open(member) as src, dest.open("wb") as out:
-        shutil.copyfileobj(src, out)
+def extract(archive: Path, member: str, dest: Path) -> None:
+    if archive.name.endswith(".zip"):
+        with zipfile.ZipFile(archive) as zf, zf.open(member) as src, dest.open("wb") as out:
+            shutil.copyfileobj(src, out)
+    else:  # .tar.xz / .tar.gz: read the named member only, never extractall() (review #19)
+        with tarfile.open(archive) as tf:
+            src = tf.extractfile(member)
+            if src is None:
+                raise SystemExit(f"{member} in {archive.name} is not a regular file")
+            with src, dest.open("wb") as out:
+                shutil.copyfileobj(src, out)
     if sys.platform != "win32":
         dest.chmod(0o755)  # zip does not always keep the executable bit
 
@@ -118,12 +155,13 @@ def fetch(tag: str) -> Path:
     (staging / "licenses").mkdir(parents=True)
     with tempfile.TemporaryDirectory() as tmp:
         for i, archive in enumerate(archives):
-            zip_path = Path(tmp) / f"{i}.zip"
-            download(archive.url, zip_path, archive.sha256)
+            # keep the real name: extract() picks zip or tar from the extension
+            path = Path(tmp) / f"{i}-{archive.url.rsplit('/', 1)[-1]}"
+            download(archive.url, path, archive.sha256)
             for name, member in archive.members.items():
-                extract(zip_path, member, staging / name)
+                extract(path, member, staging / name)
             for name, member in archive.licenses.items():
-                extract(zip_path, member, staging / "licenses" / name)
+                extract(path, member, staging / "licenses" / name)
     (staging / ".manifest-hash").write_text(want)
     shutil.rmtree(target, ignore_errors=True)
     staging.rename(target)  # only a complete set ever appears under vendor/<tag>

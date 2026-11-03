@@ -89,7 +89,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 **Phase 1 - PDF from images and text**
 - [x] 8 `pyproject.toml`, `__init__.py`: 0.2.0 and new dependencies
 - [x] 9 `converters/image.py`: image to PDF via img2pdf (#1, #18)
-- [ ] 10 `scripts/fetch_binaries.py`: Typst + resvg, `.tar.xz` (#19)
+- [x] 10 `scripts/fetch_binaries.py`: Typst + resvg, `.tar.xz` (#19)
 - [ ] 11 ADR-002: Typst, resvg and detected apps
 - [ ] 12 `core/tools.py` `cwd`, `converters/document.py` PDF via Typst (#25, #11, #12)
 
