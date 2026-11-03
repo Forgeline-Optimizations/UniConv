@@ -38,6 +38,7 @@
 - Step 18 (converters/model3d.py): Model3DConverter, 7 formats, worker in run_isolated, merge/axes/texture loss hints (#16), worker returns warnings (merged N objects), empty mesh refused; tests: test_model3d_worker.py (2)
 - Step 19 (core/registry.py): Model3DConverter registered last; tests: test_model3d.py (7: merge warning, single-file glTF with data: buffers, OBJ without .mtl, axes hint #16, empty/garbage files, 3MF zip detected), 3D samples (box + sphere scene) in conftest, matrix now image 57 / data 30 / document 56 / media 66 / model3d 42; offscreen screenshot: five family buttons fit at 520 px; full suite passed
 - Step 29 (tests/ui/test_main_window.py): test_five_family_buttons, test_hint_when_no_targets (PPTX without LibreOffice -> status names LibreOffice), test_loss_hint_from_chosen_provider (SVG->JPG hint from VectorConverter); tests: 11 UI passed
+- Phase 4 done: 3D family (trimesh in run_isolated), 42 matrix pairs; UI tests of step 29 added; 494 passed per OS; CI green https://github.com/Forgeline-Optimizations/UniConv/actions/runs/41559722856
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 - Step 9: palette frames become RGB/RGBA before img2pdf, and a frame's ICC profile is dropped when its colour space changed (same rule as the raster path, review #4).
@@ -49,7 +50,7 @@
 - Step 16: on Windows resvg falls back to an installed font when a family is missing (text drawn, no stderr), so review #9's silent loss only happens on font-less systems; the warning stays and is tested on resvg's message format, and the integration test asserts text is never lost silently. Text without any font-family counts as generic for #10. The general max_megapixels limit also applies to trace sources before downscaling.
 - Step 17: _last_meaningful_line prefers the last 'error:' line and skips compiler-style code-frame lines; Typst's diagnostics end with a caret line that hid both the message and the linked-image fallback trigger.
 - Step 18: the trimesh worker returns warnings (e.g. 'Alle 2 objecten zijn samengevoegd') that the parent passes to ctx.warn; an empty mesh (not only an empty scene) gives 'bevat geen 3D-geometrie'.
-**Left unfinished:** Phases 4-5 (steps 18-25); test steps 26-29 (remaining: 3D samples, test_model3d, UI tests).
+**Left unfinished:** Phase 5 (steps 20-25); step 26-28 boxes to tick once their remaining parts are checked (all test files exist).
 **Notes for next session:** local machine has Chrome + Edge, no LibreOffice (office tests
 only run in the CI LibreOffice job). Use `.venv` (Python 3.12). Resume from the first
 unticked step in CLAUDE.md.
