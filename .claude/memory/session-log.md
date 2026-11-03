@@ -6,6 +6,21 @@
 
 ---
 
+## Sprint 0.2 - Session 1
+**Date:** 2026-11-03
+**Goal:** implement `docs/extension-plan-0.2.md` (steps 1-29) on branch
+`feature/0.2-medium-conversions`; no tag, no merge to `main`.
+**Completed:**
+- Setup: plan file moved from `docs/Uitbreidingsplan UniConv 0.2, gemiddelde conversies.md`
+  to `docs/extension-plan-0.2.md`; branch created; checklist in CLAUDE.md.
+**Decisions made:** none yet
+**Left unfinished:** everything from step 1.
+**Notes for next session:** local machine has Chrome + Edge, no LibreOffice (office tests
+only run in the CI LibreOffice job). Use `.venv` (Python 3.12). Resume from the first
+unticked step in CLAUDE.md.
+
+---
+
 ## Sprint 5 - Session 1
 **Date:** 2026-11-02
 **Goal:** Packaging and release (plan steps 28-33).

@@ -71,17 +71,54 @@ needed.
   is validated by that converter's `Options`. The app writes `config.defaults.json` at start
   as a reference; users override keys in `config.json`.
 
-## Current Sprint: none - v1 feature-complete (plan steps 1-37 done)
-**State:** CI green on Windows + macOS; the `release` workflow dry run (workflow_dispatch)
-built, smoke-tested and packaged both installers (run 41538628187).
+## Current Sprint: 0.2: medium conversions
+**Goal:** implement `docs/extension-plan-0.2.md` (steps 1-29) on branch
+`feature/0.2-medium-conversions`: providers per family, lossless image PDF, PDF via Typst,
+Office/browser PDF via detected apps, vector (resvg, Typst, vtracer), new 3D family.
+Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge to `main`.
 
-**Open, needs the maintainer:**
-- [ ] Open the DMG on a real Apple Silicon Mac and try drag & drop (review #18).
-- [ ] Try the Windows installer by hand (install, upgrade over itself, uninstall).
-- [ ] Publish: `git tag v0.1.0 && git push origin v0.1.0` (tag must equal `uniconv.__version__`).
+**Phase 0 - foundation**
+- [ ] 1 `__main__.py`: `multiprocessing.freeze_support()` first (#7)
+- [ ] 2 `core/converter.py`: `NoOptions`, `options_key`, `install_hint`, `config_section()`
+- [ ] 3 `converters/formats.py`: shared `Format` constants
+- [ ] 4 `core/registry.py`: providers per family, weak MIMEs, `hints()` (#6, #13)
+- [ ] 5 `core/jobs.py`, `cli.py`, `ui/main_window.py`, `ui/app.py`: new registry API
+- [ ] 6 `core/isolate.py`: `run_isolated()` (#3)
+- [ ] 7 `core/apps.py`: `find_app()` for LibreOffice and Chrome/Edge
 
-**Ideas after v1 (from the plan's extensibility table, not scheduled):** batch in the UI,
-per-conversion options generated from `Options.model_json_schema()`, multi-step routes.
+**Phase 1 - PDF from images and text**
+- [ ] 8 `pyproject.toml`, `__init__.py`: 0.2.0 and new dependencies
+- [ ] 9 `converters/image.py`: image to PDF via img2pdf (#1, #18)
+- [ ] 10 `scripts/fetch_binaries.py`: Typst + resvg, `.tar.xz` (#19)
+- [ ] 11 ADR-002: Typst, resvg and detected apps
+- [ ] 12 `core/tools.py` `cwd`, `converters/document.py` PDF via Typst (#25, #11, #12)
+
+**Phase 2 - Office and browser to PDF**
+- [ ] 13 `converters/office.py` + `ConversionTimeout` (#4, #5, #13, #14, #17)
+- [ ] 14 `converters/browser.py` (#15)
+- [ ] 15 registry order: Office and browser before Pandoc
+
+**Phase 3 - vector**
+- [ ] 16 `converters/vector.py` + `encode_raster()` (#2, #3, #9, #10, #26)
+- [ ] 17 register `VectorConverter`
+
+**Phase 4 - 3D models**
+- [ ] 18 `converters/model3d.py` (#16)
+- [ ] 19 register `Model3DConverter`
+
+**Phase 5 - packaging, CI, licenses, memory**
+- [ ] 20 `packaging/uniconv.spec`: trimesh data, licenses, macOS 14.0 (#8)
+- [ ] 21 `packaging/licenses/`, `THIRD_PARTY_LICENSES.md` (#20)
+- [ ] 22 `ci.yml`: otool for Typst/resvg, LibreOffice job
+- [ ] 23 `release.yml`: smoke test of the new routes
+- [ ] 24 `README.md`
+- [ ] 25 memory files, ADR-003
+
+**Tests (written in the phase they belong to)**
+- [ ] 26 `conftest.py` + markers, samples, `registry_without()`
+- [ ] 27 unit tests
+- [ ] 28 integration tests
+- [ ] 29 UI tests
 
 ## Milestone history
 - Sprint 0 - Project Initialization: memory workspace scaffolded from the plan. done
