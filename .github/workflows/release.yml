@@ -60,6 +60,33 @@ jobs:
             "../$BIN" convert smoke.wav --to mp3 --out out
             test -s out/smoke.mp3 || { echo "::error::missing out/smoke.mp3"; exit 1; }
           fi
+          # 0.2 routes: Typst, img2pdf + pikepdf, resvg, and two engines in a spawned child
+          # process (vtracer, trimesh + scipy), which only works with freeze_support() (#7)
+          printf '# Titel\n\nTekst.\n' > smoke2.md
+          printf '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20" fill="red"/></svg>' > smoke.svg
+          printf 'solid t\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex 1 0 0\nvertex 0 1 0\nendloop\nendfacet\nendsolid t\n' > smoke.stl
+          "../$BIN" convert smoke2.md --to pdf --out out    # Pandoc + Typst
+          "../$BIN" convert smoke.png --to pdf --out out    # img2pdf (+ pikepdf)
+          "../$BIN" convert smoke.svg --to png --out out    # resvg
+          "../$BIN" convert smoke.png --to svg --out out    # vtracer in a child process
+          "../$BIN" convert smoke.stl --to glb --out out    # trimesh + scipy in a child process
+          for f in out/smoke2.pdf out/smoke.pdf out/smoke.png out/smoke.svg out/smoke.glb; do
+            test -s "$f" || { echo "::error::missing $f"; exit 1; }
+          done
+          # A missing freeze_support() shows up as a runaway: no UniConv process may remain.
+          python - <<'EOF'
+          import subprocess, sys
+          if sys.platform == "win32":
+              out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq UniConv.exe", "/NH"],
+                                   capture_output=True, text=True).stdout
+              left = [line for line in out.splitlines() if line.startswith("UniConv.exe")]
+          else:
+              out = subprocess.run(["pgrep", "-x", "UniConv"], capture_output=True, text=True)
+              left = out.stdout.split()
+          if left:
+              sys.exit(f"::error::UniConv processes still running after the CLI: {left}")
+          print("no stray UniConv processes: OK")
+          EOF
           # The window must start and keep running (missing Qt plugins crash at start-up).
           QT_QPA_PLATFORM=offscreen python - "../$BIN" <<'EOF'
           import subprocess, sys
