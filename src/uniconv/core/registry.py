@@ -144,12 +144,19 @@ class Registry:
 
 def default_providers() -> list[Converter]:
     """Every provider, in UI order and priority (earlier wins within a family)."""
+    from uniconv.converters.browser import BrowserPdfConverter
     from uniconv.converters.data import DataConverter
     from uniconv.converters.document import DocumentConverter
     from uniconv.converters.image import ImageConverter
     from uniconv.converters.media import MediaConverter
+    from uniconv.converters.office import OfficeDocumentConverter, OfficeSheetConverter
 
-    return [ImageConverter(), DataConverter(), DocumentConverter(), MediaConverter()]
+    return [
+        ImageConverter(),
+        DataConverter(), OfficeSheetConverter(),  # pandas for everything except PDF
+        OfficeDocumentConverter(), BrowserPdfConverter(), DocumentConverter(),  # best PDF first
+        MediaConverter(),
+    ]
 
 
 def build_default_registry() -> Registry:

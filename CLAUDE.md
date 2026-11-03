@@ -96,7 +96,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 **Phase 2 - Office and browser to PDF**
 - [x] 13 `converters/office.py` + `ConversionTimeout` (#4, #5, #13, #14, #17)
 - [x] 14 `converters/browser.py` (#15)
-- [ ] 15 registry order: Office and browser before Pandoc
+- [x] 15 registry order: Office and browser before Pandoc
 
 **Phase 3 - vector**
 - [ ] 16 `converters/vector.py` + `encode_raster()` (#2, #3, #9, #10, #26)

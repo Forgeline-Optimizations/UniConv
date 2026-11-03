@@ -1,5 +1,10 @@
 name: ci
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"  # weekly: the LibreOffice job also runs when nobody pushes
 
 jobs:
   test:
@@ -34,3 +39,38 @@ jobs:
       - run: pytest -q -rs
         env:
           QT_QPA_PLATFORM: offscreen  # pytest-qt without a display
+
+  # LibreOffice takes minutes to install, so its tests run weekly and on demand
+  # (gh workflow run ci.yml --ref <branch>), not on every push.
+  libreoffice:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      UNICONV_EXPECT_LIBREOFFICE: "1"
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - uses: actions/cache@v6
+        with:
+          path: vendor
+          key: vendor-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/fetch_binaries.py') }}
+      - run: python scripts/fetch_binaries.py
+      - name: Install LibreOffice (Windows)
+        if: runner.os == 'Windows'
+        run: choco install libreoffice-fresh -y --no-progress
+      - name: Install LibreOffice (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install --cask libreoffice
+          xattr -dr com.apple.quarantine /Applications/LibreOffice.app || true
+      - run: pytest -q -rs -s -m needs_libreoffice
+      - run: pytest -q -rs tests/unit/test_apps.py -k ci_libreoffice

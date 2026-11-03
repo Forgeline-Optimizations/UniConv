@@ -44,7 +44,10 @@ _TEXT_SAMPLES = {
     ),
     "rtf": r"{\rtf1\ansi{\b Titel}\par Tekst met nadruk.\par}" "\n",
 }
-_PANDOC_SAMPLES = {"docx", "odt", "epub"}
+_PANDOC_SAMPLES = {"docx", "odt", "epub", "pptx"}
+# made by LibreOffice from a generated modern file: (filter, made from)
+_SOFFICE_SAMPLES = {"doc": ("doc", "docx"), "xls": ("xls", "xlsx"), "ppt": ("ppt", "pptx"),
+                    "ods": ("ods", "xlsx"), "odp": ("odp", "pptx")}
 _PIL_FORMAT = {"jpg": "JPEG", "png": "PNG", "webp": "WEBP", "gif": "GIF", "bmp": "BMP",
                "tiff": "TIFF", "heic": "HEIF"}
 
@@ -117,6 +120,30 @@ def make_image(path: Path, key: str, size: tuple[int, int] = (32, 24),
     return path
 
 
+def run_soffice(src: Path, fmt: str, outdir: Path) -> Path:
+    """Convert with the user's LibreOffice, own profile, like converters/office.py."""
+    profile = (outdir / "lo-profile").resolve().as_uri()
+    subprocess.run([str(find_app("libreoffice")), f"-env:UserInstallation={profile}",
+                    "--headless", "--norestore", "--convert-to", fmt, "--outdir", str(outdir),
+                    str(src)], check=True, timeout=180, capture_output=True)
+    out = outdir / f"{src.stem}.{fmt}"
+    assert out.is_file(), f"LibreOffice made no {fmt}"
+    return out
+
+
+def make_protected_docx(path: Path, password: str = "geheim") -> Path:
+    """A password-protected .docx is an OLE container, not a zip (review #13)."""
+    import msoffcrypto.format.ooxml
+
+    plain = path.with_name(f"{path.stem}-plain.docx")
+    md = path.with_name(f"{path.stem}-src.md")
+    md.write_text(_TEXT_SAMPLES["md"], encoding="utf-8")
+    run_pandoc(str(md), "-o", str(plain))
+    with plain.open("rb") as src, path.open("wb") as out:
+        msoffcrypto.format.ooxml.OOXMLFile(src).encrypt(password, out)
+    return path
+
+
 def run_pandoc(*args: str) -> None:
     subprocess.run([str(find_tool("pandoc")), *args], check=True, timeout=60,
                    capture_output=True)
@@ -167,6 +194,11 @@ def make_sample(tmp_path: Path) -> Callable[..., Path]:
             md.write_text(_TEXT_SAMPLES["md"], encoding="utf-8")
             run_pandoc(str(md), "-o", str(path), "--metadata", "title=Voorbeeld")
             return path
+        if key in _SOFFICE_SAMPLES:
+            fmt, base = _SOFFICE_SAMPLES[key]
+            modern = _make(base, name=f"{name}-modern")
+            made = run_soffice(modern, fmt, samples / f"lo-{key}")
+            return made.replace(path)
         if key in _MEDIA_AUDIO | _MEDIA_VIDEO:
             return make_media(path, key, **kw)
         raise KeyError(f"no sample generator for {key!r}")

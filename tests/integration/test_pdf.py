@@ -6,7 +6,9 @@ import pytest
 from PIL import Image
 
 from uniconv.config import AppConfig, PathsConfig
+from uniconv.converters.browser import BrowserPdfConverter
 from uniconv.converters.document import DocumentConverter
+from uniconv.converters.office import OfficeDocumentConverter
 from uniconv.core.converter import CancelToken
 from uniconv.core.jobs import Job, JobRunner
 from uniconv.core.workspace import Workspace
@@ -14,7 +16,7 @@ from uniconv.core.workspace import Workspace
 pytestmark = [pytest.mark.needs_pandoc, pytest.mark.needs_typst]
 
 # Providers that beat Pandoc for PDF when their app is installed (steps 13-14).
-BETTER_PDF_PROVIDERS: tuple[type, ...] = ()
+BETTER_PDF_PROVIDERS = (OfficeDocumentConverter, BrowserPdfConverter)
 
 
 def _pdf_text(path) -> str:
@@ -109,3 +111,25 @@ def test_html_falls_back_to_pandoc_with_browser_hint(registry_without, make_samp
     assert any("Chrome of Edge" in m for m in conv.expected_losses("html", "pdf"))
     [result] = runner.run(Job("document", "pdf", [make_sample("html")], out_dir), CancelToken())
     assert result.status == "done", result.error
+
+
+def test_provider_priority_with_and_without_libreoffice(registry, registry_without, runner,
+                                                       make_sample, tmp_path, out_dir):
+    """The key 0.2 test: same Job twice. With LibreOffice it wins and needs no loss hint;
+    without it Pandoc + Typst still produce a PDF and the hint names LibreOffice."""
+    src = make_sample("docx")
+    job = Job("document", "pdf", [src], out_dir)
+
+    best = registry.find("document", "docx", "pdf")
+    if isinstance(best, OfficeDocumentConverter):
+        assert not any("LibreOffice" in m for m in best.expected_losses("docx", "pdf"))
+    [first] = runner.run(job, CancelToken())
+    assert first.status == "done", first.error
+
+    reg, fallback_runner = _pandoc_runner(registry_without, tmp_path)
+    fallback = reg.find("document", "docx", "pdf")
+    assert isinstance(fallback, DocumentConverter)
+    assert any("LibreOffice" in m for m in fallback.expected_losses("docx", "pdf"))
+    [second] = fallback_runner.run(job, CancelToken())
+    assert second.status == "done", second.error
+    assert {first.output.name, second.output.name} == {"sample.pdf", "sample (1).pdf"}
