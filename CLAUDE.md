@@ -107,7 +107,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 - [x] 19 register `Model3DConverter`
 
 **Phase 5 - packaging, CI, licenses, memory**
-- [ ] 20 `packaging/uniconv.spec`: trimesh data, licenses, macOS 14.0 (#8)
+- [x] 20 `packaging/uniconv.spec`: trimesh data, licenses, macOS 14.0 (#8)
 - [ ] 21 `packaging/licenses/`, `THIRD_PARTY_LICENSES.md` (#20)
 - [ ] 22 `ci.yml`: otool for Typst/resvg, LibreOffice job
 - [ ] 23 `release.yml`: smoke test of the new routes
