@@ -78,7 +78,7 @@ Office/browser PDF via detected apps, vector (resvg, Typst, vtracer), new 3D fam
 Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge to `main`.
 
 **Phase 0 - foundation**
-- [ ] 1 `__main__.py`: `multiprocessing.freeze_support()` first (#7)
+- [x] 1 `__main__.py`: `multiprocessing.freeze_support()` first (#7)
 - [ ] 2 `core/converter.py`: `NoOptions`, `options_key`, `install_hint`, `config_section()`
 - [ ] 3 `converters/formats.py`: shared `Format` constants
 - [ ] 4 `core/registry.py`: providers per family, weak MIMEs, `hints()` (#6, #13)

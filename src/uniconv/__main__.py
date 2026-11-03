@@ -1,3 +1,4 @@
+import multiprocessing
 import sys
 
 from uniconv import __version__
@@ -5,6 +6,9 @@ from uniconv import __version__
 
 def main(argv: list[str] | None = None) -> int:
     """Entry point for `python -m uniconv`, the console script and the PyInstaller build."""
+    # NOTE: must be first. In the frozen app a worker process re-enters here and is diverted
+    # by this call; without it the app spawns itself forever (review #7).
+    multiprocessing.freeze_support()
     argv = sys.argv[1:] if argv is None else argv
     argv = [a for a in argv if not a.startswith("-psn_")]  # macOS Finder process serial number
     if argv == ["--version"]:
