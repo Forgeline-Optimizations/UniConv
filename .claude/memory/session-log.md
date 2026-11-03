@@ -49,6 +49,7 @@
 - Step 28 (tests/integration): checked complete: test_matrix (sources()), test_image (PDF), test_pdf, test_office, test_browser, test_vector, test_model3d, test_document line 82
 - Step 25 (ADR-003-providers-per-family.md, CLAUDE.md, core/converters/tests/scripts/packaging CLAUDE.md): providers, isolation, detected apps, audit findings and pitfalls recorded; docs/extension-plan-0.2.md committed at sprint start
 - Phase 5 done: spec (trimesh data, licenses, macOS 14), licenses, CI otool for typst/resvg, release smoke of 5 new routes + stray-process check, README, memory + ADR-003. Final: CI push green https://github.com/Forgeline-Optimizations/UniConv/actions/runs/41560992735 ; CI + LibreOffice job green https://github.com/Forgeline-Optimizations/UniConv/actions/runs/41560999904 ; release dry run 0.2.0 green on both OSes (9 smoke conversions, no stray processes, GUI starts; installer artifact 177 MB, DMG artifact 222 MB) https://github.com/Forgeline-Optimizations/UniConv/actions/runs/41561003122
+- Post-sprint (2026-11-03): installed 0.2.0 on the dev PC (0.1.0 uninstalled), all 251 offered conversions passed through the installed exe; after installing LibreOffice 26.8.2 (winget) all 258 passed, Office PDFs produced by LibreOffice, HTML by Chrome (Skia), MD/TEX/EPUB by Typst. Fixed tests/conftest.py run_soffice: profile in a short temp dir (inside a deep samples dir LibreOffice crashed with 0xC0000409, same Windows path-limit issue as the app).
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 - Step 9: palette frames become RGB/RGBA before img2pdf, and a frame's ICC profile is dropped when its colour space changed (same rule as the raster path, review #4).
@@ -62,7 +63,7 @@
 - Step 18: the trimesh worker returns warnings (e.g. 'Alle 2 objecten zijn samengevoegd') that the parent passes to ctx.warn; an empty mesh (not only an empty scene) gives 'bevat geen 3D-geometrie'.
 - Step 24: README stays English (repo documentation language), so 'Betere PDF's' became 'Better PDFs'; size stated from the measured local build (+148 MB), not the plan's ~110 MB estimate.
 **Left unfinished:** Nothing from the plan. Not done by instruction: tag v0.2.0 and merge feature/0.2-medium-conversions into main (both publish/affect the release); maintainer decides.
-**Notes for next session:** All 29 steps ticked. Before tagging: open the 0.2.0 DMG on a real Mac (macOS 14+) and try an Office file with LibreOffice installed there; then merge to main (PR) and tag v0.2.0. LibreOffice CI job runs weekly (Mon 03:17 UTC) and on gh workflow run ci.yml. Local machine: no LibreOffice, Chrome + Edge present; dist/ holds a local 0.2.0 Windows build.
+**Notes for next session:** All 29 steps ticked. Before tagging: open the 0.2.0 DMG on a real Mac (macOS 14+); then merge to main (PR) and tag v0.2.0. Dev PC now has LibreOffice 26.8.2, Chrome, Edge and UniConv 0.2.0 installed, so needs_libreoffice tests run locally too. LibreOffice CI job runs weekly and on gh workflow run ci.yml.
 
 ---
 

@@ -129,11 +129,20 @@ def make_image(path: Path, key: str, size: tuple[int, int] = (32, 24),
 
 
 def run_soffice(src: Path, fmt: str, outdir: Path) -> Path:
-    """Convert with the user's LibreOffice, own profile, like converters/office.py."""
-    profile = (outdir / "lo-profile").resolve().as_uri()
-    subprocess.run([str(find_app("libreoffice")), f"-env:UserInstallation={profile}",
-                    "--headless", "--norestore", "--convert-to", fmt, "--outdir", str(outdir),
-                    str(src)], check=True, timeout=180, capture_output=True)
+    """Convert with the user's LibreOffice, own profile, like converters/office.py: the
+    profile lives in a SHORT temp dir, because deep paths break Windows' path limit."""
+    import shutil
+    import tempfile
+
+    profile = Path(tempfile.mkdtemp(prefix="uniconv-lo-"))
+    try:
+        subprocess.run([str(find_app("libreoffice")),
+                        f"-env:UserInstallation={profile.as_uri()}",
+                        "--headless", "--norestore", "--convert-to", fmt,
+                        "--outdir", str(outdir), str(src)],
+                       check=True, timeout=180, capture_output=True)
+    finally:
+        shutil.rmtree(profile, ignore_errors=True)
     out = outdir / f"{src.stem}.{fmt}"
     assert out.is_file(), f"LibreOffice made no {fmt}"
     return out
