@@ -28,7 +28,6 @@ Built, smoke-tested and published by `.github/workflows/release.yml` (plan steps
 - Release workflow: build per OS, then the frozen app converts PNG, CSV, MD and WAV and the
   GUI must survive 10 s offscreen; tag must equal `uniconv.__version__`; `workflow_dispatch`
   runs everything except publishing. Inno Setup is installed via choco when missing.
-
 - 0.2 smoke test adds md->pdf (Typst), png->pdf (img2pdf), svg->png (resvg), png->svg and
   stl->glb (both in a spawned child: proves `freeze_support()`), then fails if any UniConv
   process is still running.
