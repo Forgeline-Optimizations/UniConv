@@ -1,8 +1,11 @@
 """Office documents, presentations and spreadsheets to PDF via the user's own LibreOffice.
 Never bundled: found by core.apps.find_app("libreoffice")."""
 
+import logging
 import shutil
+import tempfile
 import time
+from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -16,6 +19,8 @@ _HINT = ("Installeer LibreOffice (gratis, libreoffice.org) en start UniConv opni
          "voor PDF met de originele opmaak.")
 # If soffice returns before the file is written (step 13 audit), wait this long for it.
 _OUTPUT_GRACE_S = 10
+
+log = logging.getLogger(__name__)
 
 
 class OfficeOptions(BaseModel):
@@ -70,8 +75,12 @@ def _soffice_to_pdf(ctx: ConversionContext) -> None:
     shutil.copyfile(ctx.input_path, src)
     outdir = work / "lo-out"
     out_lines: list[str] = []
+    # Own profile per job (review #5), in a SHORT temp dir: inside the job dir the profile's
+    # nested files exceed Windows' 260-character path limit and LibreOffice silently makes
+    # no PDF (seen on the CI runners).
+    profile = Path(tempfile.mkdtemp(prefix="uniconv-lo-"))
     cmd = [str(soffice),
-           f"-env:UserInstallation={(work / 'lo-profile').as_uri()}",  # own profile (review #5)
+           f"-env:UserInstallation={profile.as_uri()}",
            "--headless", "--norestore", "--nologo",
            "--convert-to", "pdf", "--outdir", str(outdir), str(src)]
     try:
@@ -81,6 +90,10 @@ def _soffice_to_pdf(ctx: ConversionContext) -> None:
         raise ConversionError(
             "LibreOffice reageert niet. Open LibreOffice één keer zelf (macOS vraagt dan om "
             "toestemming) en probeer het opnieuw.") from exc
+    except ConversionError as exc:
+        stderr = str(exc)  # macOS exits non-zero on failure, Windows exits 0: same analysis
+    finally:
+        shutil.rmtree(profile, ignore_errors=True)
     produced = outdir / "input.pdf"
     deadline = time.monotonic() + _OUTPUT_GRACE_S
     while not produced.is_file() and time.monotonic() < deadline and _may_still_appear(out_lines):
@@ -88,6 +101,7 @@ def _soffice_to_pdf(ctx: ConversionContext) -> None:
         time.sleep(0.2)
     if not produced.is_file():  # exit code is 0 even on failure (review #4)
         output = "\n".join(out_lines) + "\n" + stderr  # versions differ in which stream
+        log.warning("LibreOffice made no PDF for %s:\n%s", ctx.input_path.name, output.strip())
         if "could not be loaded" in output:
             raise ConversionError("LibreOffice kan dit bestand niet openen. Het is beschadigd "
                                   "of beveiligd met een wachtwoord.")  # review #13

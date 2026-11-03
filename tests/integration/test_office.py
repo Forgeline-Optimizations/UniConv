@@ -118,11 +118,27 @@ def test_where_the_error_line_goes(tmp_path):
 
     bad = tmp_path / "kapot.docx"
     bad.write_bytes(b"PK\x03\x04 broken")
+    from uniconv.core.errors import ConversionError
+
     out_lines: list[str] = []
-    stderr = run_tool([str(find_app("libreoffice")),
-                       f"-env:UserInstallation={(tmp_path / 'prof').as_uri()}",
-                       "--headless", "--norestore", "--convert-to", "pdf",
-                       "--outdir", str(tmp_path / "o"), str(bad)],
-                      timeout_s=180, cancel=CancelToken(), on_stdout_line=out_lines.append)
-    print("AUDIT stdout:", out_lines, "| stderr:", stderr.strip()[:300])
+    try:
+        stderr = run_tool([str(find_app("libreoffice")),
+                           f"-env:UserInstallation={(tmp_path / 'prof').as_uri()}",
+                           "--headless", "--norestore", "--convert-to", "pdf",
+                           "--outdir", str(tmp_path / "o"), str(bad)],
+                          timeout_s=180, cancel=CancelToken(), on_stdout_line=out_lines.append)
+        exit_code = "0"
+    except ConversionError as exc:  # non-zero exit: run_tool reports the last stderr line
+        stderr, exit_code = str(exc), "non-zero"
+    print("AUDIT exit:", exit_code, "| stdout:", out_lines, "| stderr:", stderr.strip()[:300])
     assert any("could not be loaded" in s for s in [*out_lines, stderr])
+
+
+def test_no_profile_left_in_temp(runner, make_sample, out_dir):
+    import tempfile
+    from pathlib import Path
+
+    before = set(Path(tempfile.gettempdir()).glob("uniconv-lo-*"))
+    [result] = runner.run(Job("document", "pdf", [make_sample("odt")], out_dir), CancelToken())
+    assert result.status == "done", result.error
+    assert set(Path(tempfile.gettempdir()).glob("uniconv-lo-*")) == before
