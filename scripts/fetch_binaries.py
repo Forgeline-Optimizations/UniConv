@@ -130,6 +130,9 @@ def extract(archive: Path, member: str, dest: Path) -> None:
             shutil.copyfileobj(src, out)
     else:  # .tar.xz / .tar.gz: read the named member only, never extractall() (review #19)
         with tarfile.open(archive) as tf:
+            # check first: extractfile() would follow a symlink to another member
+            if not tf.getmember(member).isfile():
+                raise SystemExit(f"{member} in {archive.name} is not a regular file")
             src = tf.extractfile(member)
             if src is None:
                 raise SystemExit(f"{member} in {archive.name} is not a regular file")
