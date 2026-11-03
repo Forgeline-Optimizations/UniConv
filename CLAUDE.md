@@ -81,8 +81,8 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 - [x] 1 `__main__.py`: `multiprocessing.freeze_support()` first (#7)
 - [x] 2 `core/converter.py`: `NoOptions`, `options_key`, `install_hint`, `config_section()`
 - [x] 3 `converters/formats.py`: shared `Format` constants
-- [ ] 4 `core/registry.py`: providers per family, weak MIMEs, `hints()` (#6, #13)
-- [ ] 5 `core/jobs.py`, `cli.py`, `ui/main_window.py`, `ui/app.py`: new registry API
+- [x] 4 `core/registry.py`: providers per family, weak MIMEs, `hints()` (#6, #13)
+- [x] 5 `core/jobs.py`, `cli.py`, `ui/main_window.py`, `ui/app.py`: new registry API
 - [ ] 6 `core/isolate.py`: `run_isolated()` (#3)
 - [ ] 7 `core/apps.py`: `find_app()` for LibreOffice and Chrome/Edge
 

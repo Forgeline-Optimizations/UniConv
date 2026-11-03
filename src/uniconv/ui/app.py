@@ -55,14 +55,15 @@ def run_gui() -> int:
     app.setOrganizationName("Forgeline Optimizations")
     win = MainWindow(registry, JobRunner(registry, workspace, cfg), cfg, cfg_path)
 
-    problems = []
+    problems: dict[str, str] = {}  # per config section, so one typo is reported once
     for family, _label in registry.families():
-        try:
-            registry.options_for(family, cfg)
-        except ConversionError as exc:
-            problems.append(str(exc))
+        for conv in registry.providers(family):
+            try:
+                registry.options_for(conv, cfg)
+            except ConversionError as exc:
+                problems.setdefault(conv.config_section(), str(exc))
     if problems:  # shown once; conversions of that family keep failing with the same message
-        QMessageBox.warning(win, APP_NAME, "\n".join(problems))
+        QMessageBox.warning(win, APP_NAME, "\n".join(problems.values()))
 
     win.show()
     return app.exec()

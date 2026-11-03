@@ -16,7 +16,10 @@
 - Step 1 (__main__.py): freeze_support() as first call (#7); tests: added test_main_calls_freeze_support_first, test_cli 5 passed
 - Step 2 (core/converter.py): NoOptions, options_key, install_hint, config_section(); tests: test_config_section_defaults_to_family added, test_registry 7 passed
 - Step 3 (converters/formats.py, image/data/document.py): shared Format constants incl. new SVG/XLS/ODS/DOC/PPT(X)/ODP; tests: full suite 328 passed
-**Decisions made:** none yet
+- Step 4 (core/registry.py): providers per family, shared formats, weak MIMEs, hints(), options per section; tests: test_registry rewritten (13 tests), full suite 334 passed
+- Step 5 (core/jobs.py, cli.py, ui/main_window.py, ui/app.py): options from the chosen provider, CLI shows hints, UI shows install hint (grey line or status when no targets), loss hint from find(); tests: full suite 334 passed
+**Decisions made:**
+- Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 **Left unfinished:** everything from step 1.
 **Notes for next session:** local machine has Chrome + Edge, no LibreOffice (office tests
 only run in the CI LibreOffice job). Use `.venv` (Python 3.12). Resume from the first

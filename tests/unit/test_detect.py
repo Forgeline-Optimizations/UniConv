@@ -84,5 +84,5 @@ def test_filetype_mime_matches_declared_format(registry, make_sample, key):
     kind = filetype.guess(str(src))
     assert kind is not None, f"filetype does not recognise {key}"
     assert kind.mime in registry.format(key).mimes
-    family = next(f for f, _ in registry.families() if key in registry.converter(f).sources())
+    family = next(f for f, _ in registry.families() if key in registry.sources(f))
     assert registry.detect(src, family).key == key

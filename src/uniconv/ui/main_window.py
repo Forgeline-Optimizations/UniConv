@@ -90,6 +90,12 @@ class MainWindow(QMainWindow):
         self.loss_label.setVisible(False)
         root.addWidget(self.loss_label)
 
+        self.install_hint_label = QLabel()  # e.g. "Installeer LibreOffice ..." for more targets
+        self.install_hint_label.setWordWrap(True)
+        self.install_hint_label.setStyleSheet("color: gray; font-style: italic;")
+        self.install_hint_label.setVisible(False)
+        root.addWidget(self.install_hint_label)
+
         out_row = QHBoxLayout()
         self.output_edit = QLineEdit()
         self.output_edit.setReadOnly(True)
@@ -148,13 +154,14 @@ class MainWindow(QMainWindow):
             btn.setChecked(btn.property("family") == family)
         self._source = None
         self.drop_zone.reset()
-        label = dict(self.registry.families())[family]
+        label = self.registry.family_label(family)
         self.drop_zone.set_extensions(label, self.registry.extensions(family))
         self.target_combo.clear()
         self.convert_btn.setEnabled(False)
         self.open_folder_btn.setVisible(False)
         self.warnings_label.clear()
         self._update_loss_hint()
+        self._show_install_hint([])
         self._show_status("")
 
     @Slot(Path)
@@ -170,6 +177,7 @@ class MainWindow(QMainWindow):
             self.target_combo.clear()
             self.convert_btn.setEnabled(False)
             self._update_loss_hint()
+            self._show_install_hint([])
             self._show_status(str(exc), error=True)  # e.g. the WrongFamilyError text
             return
         self._source = (path, fmt)
@@ -180,15 +188,28 @@ class MainWindow(QMainWindow):
             self.target_combo.addItem(self.registry.format(key).label, key)
         self.target_combo.blockSignals(False)
         self._update_loss_hint()
-        self.convert_btn.setEnabled(self.target_combo.count() > 0)
-        self._show_status("")
+        has_targets = self.target_combo.count() > 0
+        self.convert_btn.setEnabled(has_targets)
+        hints = self.registry.hints(self._family, fmt.key)
+        if has_targets:
+            self._show_install_hint(hints)
+            self._show_status("")
+        else:  # e.g. a PowerPoint without LibreOffice: say what to install
+            self._show_install_hint([])
+            self._show_status(" ".join(hints) or self.tr("Geen doelformaten beschikbaar"),
+                              error=True)
+
+    def _show_install_hint(self, hints: list[str]) -> None:
+        self.install_hint_label.setText(" ".join(hints))
+        self.install_hint_label.setVisible(bool(hints))
 
     @Slot()
     def _update_loss_hint(self) -> None:
         losses: list[str] = []
         target = self.target_combo.currentData()
         if self._source is not None and target:
-            conv = self.registry.converter(self._family)
+            # the provider that will actually run, so the hint matches its engine
+            conv = self.registry.find(self._family, self._source[1].key, target)
             losses = conv.expected_losses(self._source[1].key, target)
         self.loss_label.setText("\n".join(losses))
         self.loss_label.setVisible(bool(losses))
