@@ -104,7 +104,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 
 **Phase 4 - 3D models**
 - [x] 18 `converters/model3d.py` (#16)
-- [ ] 19 register `Model3DConverter`
+- [x] 19 register `Model3DConverter`
 
 **Phase 5 - packaging, CI, licenses, memory**
 - [ ] 20 `packaging/uniconv.spec`: trimesh data, licenses, macOS 14.0 (#8)

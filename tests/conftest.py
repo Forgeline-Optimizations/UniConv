@@ -157,6 +157,27 @@ def run_pandoc(*args: str) -> None:
                    capture_output=True)
 
 
+_MODEL3D = {"stl", "obj", "ply", "off", "glb", "gltf", "3mf"}
+
+
+def make_model(path: Path, key: str) -> Path:
+    """A scene of a box and a sphere, exported with trimesh in the test process."""
+    import trimesh
+
+    scene = trimesh.Scene([trimesh.creation.box(),
+                           trimesh.creation.icosphere().apply_translation([3, 0, 0])])
+    if key in {"stl", "ply", "off"}:  # single-mesh formats
+        data = scene.to_mesh().export(file_type=key)
+    elif key == "gltf":
+        (data,) = trimesh.exchange.gltf.export_gltf(scene, embed_buffers=True).values()
+    elif key == "obj":
+        data = scene.export(file_type="obj", include_texture=False)
+    else:
+        data = scene.export(file_type=key)
+    path.write_bytes(data if isinstance(data, bytes) else data.encode("utf-8"))
+    return path
+
+
 _MEDIA_AUDIO = {"mp3", "wav", "flac", "ogg", "m4a", "opus"}
 _MEDIA_VIDEO = {"mp4", "mkv", "webm", "mov"}
 
@@ -209,6 +230,8 @@ def make_sample(tmp_path: Path) -> Callable[..., Path]:
             return made.replace(path)
         if key in _MEDIA_AUDIO | _MEDIA_VIDEO:
             return make_media(path, key, **kw)
+        if key in _MODEL3D:
+            return make_model(path, key)
         raise KeyError(f"no sample generator for {key!r}")
 
     return _make

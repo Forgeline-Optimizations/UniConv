@@ -149,6 +149,7 @@ def default_providers() -> list[Converter]:
     from uniconv.converters.document import DocumentConverter
     from uniconv.converters.image import ImageConverter
     from uniconv.converters.media import MediaConverter
+    from uniconv.converters.model3d import Model3DConverter
     from uniconv.converters.office import OfficeDocumentConverter, OfficeSheetConverter
     from uniconv.converters.vector import VectorConverter
 
@@ -157,6 +158,7 @@ def default_providers() -> list[Converter]:
         DataConverter(), OfficeSheetConverter(),  # pandas for everything except PDF
         OfficeDocumentConverter(), BrowserPdfConverter(), DocumentConverter(),  # best PDF first
         MediaConverter(),
+        Model3DConverter(),
     ]
 
 
