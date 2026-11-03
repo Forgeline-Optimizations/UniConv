@@ -3,6 +3,7 @@
 import io
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Literal
 
 import img2pdf
 from PIL import Image, ImageOps, ImageSequence, UnidentifiedImageError
@@ -24,6 +25,10 @@ class ImageOptions(BaseModel):
     pdf_dpi: int = Field(150, ge=72, le=600)
     flatten_background: str = Field("#FFFFFF", pattern=r"^#[0-9A-Fa-f]{6}$")
     max_megapixels: int = Field(150, ge=1)          # below Pillow's own ~178 MP hard limit
+    svg_min_px: int = Field(512, ge=16, le=16384)        # small icons are scaled up to this
+    trace_colormode: Literal["color", "binary"] = "color"
+    trace_max_megapixels: float = Field(1.0, gt=0, le=16)  # 4 MP took 111 s in tests
+    trace_filter_speckle: int = Field(4, ge=0, le=128)     # ignore blobs smaller than this (px)
 
 
 # Modes each writer accepts without surprises; anything else is converted first.
@@ -69,30 +74,7 @@ class ImageConverter(Converter):
         except (Image.DecompressionBombError, UnidentifiedImageError, OSError) as exc:
             raise ConversionError(f"Afbeelding kan niet worden gelezen: {exc}") from exc
         ctx.cancel.raise_if_cancelled()
-
-        before = _colour_space(img.mode)
-        img = _normalize_mode(img, key, opts.flatten_background)
-        # Writers fall back to img.info["icc_profile"], so the profile must leave the image too.
-        img.info.pop("icc_profile", None)
-        if _colour_space(img.mode) != before:
-            icc = None  # a CMYK profile attached to RGB pixels renders wrong colours (review #4)
-
-        params: dict = {}
-        if icc and key in {"jpg", "png", "webp", "tiff"}:
-            params["icc_profile"] = icc  # keeps Display P3 iPhone photos looking right
-        match key:
-            case "jpg":
-                params |= {"quality": opts.jpeg_quality, "optimize": True}
-            case "png":
-                params |= {"compress_level": opts.png_compress_level}
-            case "webp":
-                params |= {"quality": opts.webp_quality}
-            case "tiff":
-                params |= {"compression": "tiff_lzw"}
-        try:
-            img.save(ctx.output_path, format=_PIL_FORMAT[key], **params)
-        except (OSError, ValueError) as exc:
-            raise ConversionError(f"Kan {ctx.target.label} niet schrijven: {exc}") from exc
+        encode_raster(img, key, opts, ctx.output_path, icc)
 
     def _to_pdf(self, ctx: ConversionContext) -> None:
         """Pillow would re-encode every page as JPEG q75; img2pdf embeds losslessly (review #1)."""
@@ -112,6 +94,34 @@ class ImageConverter(Converter):
         except Exception as exc:  # img2pdf raises plain ValueError and its own types
             raise ConversionError(f"Kan geen PDF maken: {exc}") from exc
         ctx.output_path.write_bytes(data)
+
+
+def encode_raster(img: Image.Image, key: str, opts: ImageOptions, path: Path,
+                  icc: bytes | None = None) -> None:
+    """Save `img` as raster format `key`; shared with VectorConverter (SVG -> JPG, ...)."""
+    before = _colour_space(img.mode)
+    img = _normalize_mode(img, key, opts.flatten_background)
+    # Writers fall back to img.info["icc_profile"], so the profile must leave the image too.
+    img.info.pop("icc_profile", None)
+    if _colour_space(img.mode) != before:
+        icc = None  # a CMYK profile attached to RGB pixels renders wrong colours (review #4)
+
+    params: dict = {}
+    if icc and key in {"jpg", "png", "webp", "tiff"}:
+        params["icc_profile"] = icc  # keeps Display P3 iPhone photos looking right
+    match key:
+        case "jpg":
+            params |= {"quality": opts.jpeg_quality, "optimize": True}
+        case "png":
+            params |= {"compress_level": opts.png_compress_level}
+        case "webp":
+            params |= {"quality": opts.webp_quality}
+        case "tiff":
+            params |= {"compression": "tiff_lzw"}
+    try:
+        img.save(path, format=_PIL_FORMAT[key], **params)
+    except (OSError, ValueError) as exc:
+        raise ConversionError(f"Kan {key.upper()} niet schrijven: {exc}") from exc
 
 
 def _check_size(im: Image.Image, opts: ImageOptions) -> None:
