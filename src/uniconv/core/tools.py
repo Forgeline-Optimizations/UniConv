@@ -16,6 +16,7 @@ from uniconv.paths import install_dir, is_frozen
 
 # Without this a console window flashes up for every conversion in the windowed Windows build.
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+_PIPE_GRACE_S = 3
 _ARCH = {"amd64": "x86_64", "x86_64": "x86_64", "arm64": "arm64", "aarch64": "arm64"}
 
 
@@ -84,8 +85,10 @@ def run_tool(cmd: list[str], *, timeout_s: int, cancel: CancelToken,
                 raise ConversionCancelled("Conversie geannuleerd")
             raise ConversionTimeout(f"Conversie duurde langer dan {timeout_s} s en is gestopt")
         time.sleep(0.1)
-    t_err.join()
-    t_out.join()
+    # The tool has exited, but helpers it left behind (a browser's crashpad) may hold the
+    # pipes open; EOF could then take forever. Everything the tool wrote is read by now.
+    t_err.join(_PIPE_GRACE_S)
+    t_out.join(_PIPE_GRACE_S)
     stderr = "".join(err_lines)
     if proc.returncode != 0:
         raise ConversionError(

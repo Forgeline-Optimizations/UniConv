@@ -84,3 +84,14 @@ def test_cwd_is_used(tmp_path):
 
 def test_timeout_is_a_conversion_error():
     assert issubclass(ConversionTimeout, ConversionError)
+
+
+def test_returns_when_a_grandchild_keeps_the_pipes_open():
+    """Browsers leave helper processes (crashpad) behind that inherit stdout/stderr; the
+    tool has exited, so run_tool must not wait for EOF on the pipes forever."""
+    code = ("import subprocess, sys; "
+            "subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(20)']); "
+            "print('parent done')")
+    start = time.monotonic()
+    tools.run_tool([PY, "-c", code], timeout_s=60, cancel=CancelToken())
+    assert time.monotonic() - start < 10
