@@ -125,3 +125,77 @@ def test_unusual_modes_reach_every_target(runner, tmp_path, out_dir, mode):
     for target in ("jpg", "webp", "gif", "bmp", "tiff", "pdf"):
         [result] = runner.run(Job("image", target, [src], out_dir), CancelToken())
         assert result.status == "done", f"{mode}->{target}: {result.error}"
+
+
+# ---- image -> PDF via img2pdf (0.2) -----------------------------------------------------
+
+def _pdf_images(path):
+    import pikepdf
+
+    with pikepdf.open(path) as pdf:
+        out = []
+        for page in pdf.pages:
+            for raw in page.get_images().values():
+                out.append((raw.Filter, bytes(raw.read_raw_bytes()), page.mediabox))
+        return out, len(pdf.pages)
+
+
+def test_png_to_pdf_is_lossless(runner, make_sample, out_dir):
+    """Review #1: Pillow wrote every page as JPEG q75; img2pdf uses a Flate stream."""
+    [result] = runner.run(Job("image", "pdf", [make_sample("png")], out_dir), CancelToken())
+    assert result.status == "done", result.error
+    images, pages = _pdf_images(result.output)
+    assert pages == 1
+    assert images[0][0] == "/FlateDecode"
+
+
+def test_jpg_to_pdf_embeds_the_original_bytes(runner, make_sample, out_dir):
+    """Review #1: no second JPEG generation."""
+    src = make_sample("jpg")
+    [result] = runner.run(Job("image", "pdf", [src], out_dir), CancelToken())
+    [(flt, data, _box)] = _pdf_images(result.output)[0]
+    assert flt == "/DCTDecode"
+    assert data == src.read_bytes()
+
+
+def test_webp_with_alpha_to_pdf(runner, tmp_path, out_dir):
+    """Review #18: img2pdf refuses WebP with alpha; we go through PNG."""
+    src = tmp_path / "alpha.webp"
+    Image.new("RGBA", (20, 20), (0, 128, 255, 100)).save(src, lossless=True)
+    [result] = runner.run(Job("image", "pdf", [src], out_dir), CancelToken())
+    assert result.status == "done", result.error
+
+
+def test_animated_gif_to_pdf_has_a_page_per_frame(runner, tmp_path, out_dir):
+    src = tmp_path / "anim.gif"
+    frames = [Image.new("RGB", (8, 8), c) for c in ("red", "green", "blue")]
+    frames[0].save(src, save_all=True, append_images=frames[1:])
+    [result] = runner.run(Job("image", "pdf", [src], out_dir), CancelToken())
+    assert result.status == "done", result.error
+    assert _pdf_images(result.output)[1] == 3
+    assert not any("eerste frame" in w for w in result.warnings)
+
+
+def test_exif_orientation_gives_portrait_pdf_page(runner, tmp_path, out_dir):
+    src = tmp_path / "phone.jpg"
+    _jpeg_with_orientation(src, 6)  # 40x20 stored, 20x40 on display
+    [result] = runner.run(Job("image", "pdf", [src], out_dir), CancelToken())
+    import pikepdf
+
+    with pikepdf.open(result.output) as pdf:
+        page = pdf.pages[0]
+        box = [float(v) for v in page.mediabox]
+        width, height = box[2] - box[0], box[3] - box[1]
+        if int(page.obj.get("/Rotate", 0)) % 180:
+            width, height = height, width
+    assert height > width
+
+
+def test_cmyk_jpeg_and_16bit_tiff_to_pdf(runner, tmp_path, out_dir):
+    cmyk = tmp_path / "print.jpg"
+    Image.new("CMYK", (20, 20), (0, 255, 255, 0)).save(cmyk)
+    tif = tmp_path / "scan.tif"
+    Image.fromarray(np.full((10, 10), 32768, dtype=np.uint16)).save(tif)
+    for src in (cmyk, tif):
+        [result] = runner.run(Job("image", "pdf", [src], out_dir), CancelToken())
+        assert result.status == "done", result.error

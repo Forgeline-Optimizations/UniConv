@@ -1,6 +1,11 @@
-"""Image family: Pillow + pillow-heif. HEIC is source-only, PDF target-only."""
+"""Image family: Pillow + pillow-heif, img2pdf for PDF. HEIC is source-only, PDF target-only."""
 
-from PIL import Image, ImageOps, UnidentifiedImageError
+import io
+from collections.abc import Iterator
+from pathlib import Path
+
+import img2pdf
+from PIL import Image, ImageOps, ImageSequence, UnidentifiedImageError
 from pillow_heif import register_heif_opener
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -23,12 +28,12 @@ class ImageOptions(BaseModel):
 
 # Modes each writer accepts without surprises; anything else is converted first.
 _TARGET_MODES = {
-    "jpg": ("RGB", "L"), "bmp": ("RGB", "L", "1"), "pdf": ("RGB", "L"),
+    "jpg": ("RGB", "L"), "bmp": ("RGB", "L", "1"),
     "png": ("RGBA", "RGB", "LA", "L", "P", "1"), "webp": ("RGBA", "RGB"),
     "tiff": ("RGBA", "RGB", "L", "CMYK", "1"), "gif": ("P",),
 }
 _PIL_FORMAT = {"jpg": "JPEG", "png": "PNG", "webp": "WEBP", "gif": "GIF",
-               "bmp": "BMP", "tiff": "TIFF", "pdf": "PDF"}
+               "bmp": "BMP", "tiff": "TIFF"}
 
 
 class ImageConverter(Converter):
@@ -39,7 +44,8 @@ class ImageConverter(Converter):
 
     def expected_losses(self, source: str, target: str) -> list[str]:
         out = []
-        if target in {"jpg", "bmp", "pdf"} and source in {"png", "webp", "gif", "tiff", "heic"}:
+        # PDF keeps alpha (img2pdf adds a soft mask), so only JPG and BMP flatten it
+        if target in {"jpg", "bmp"} and source in {"png", "webp", "gif", "tiff", "heic"}:
             out.append("Eventuele transparantie wordt een effen achtergrond.")
         if target == "gif":
             out.append("GIF heeft maximaal 256 kleuren.")
@@ -48,15 +54,14 @@ class ImageConverter(Converter):
         return out
 
     def convert(self, ctx: ConversionContext) -> None:
+        if ctx.target.key == "pdf":
+            self._to_pdf(ctx)  # lossless, multi-page (review #1)
+            return
         opts: ImageOptions = ctx.options  # type: ignore[assignment]
         key = ctx.target.key
         try:
             with Image.open(ctx.input_path) as im:  # lazy: size is known before pixels load
-                if im.width * im.height > opts.max_megapixels * 1_000_000:
-                    raise ConversionError(
-                        f"Afbeelding is groter dan {opts.max_megapixels} megapixel "
-                        "(aan te passen in config.json)"
-                    )
+                _check_size(im, opts)
                 if getattr(im, "n_frames", 1) > 1:
                     ctx.warn("Alleen het eerste frame of de eerste pagina is geconverteerd.")
                 img = ImageOps.exif_transpose(im)  # returns a copy: safe after the with-block
@@ -84,12 +89,70 @@ class ImageConverter(Converter):
                 params |= {"quality": opts.webp_quality}
             case "tiff":
                 params |= {"compression": "tiff_lzw"}
-            case "pdf":
-                params |= {"resolution": float(opts.pdf_dpi)}
         try:
             img.save(ctx.output_path, format=_PIL_FORMAT[key], **params)
         except (OSError, ValueError) as exc:
             raise ConversionError(f"Kan {ctx.target.label} niet schrijven: {exc}") from exc
+
+    def _to_pdf(self, ctx: ConversionContext) -> None:
+        """Pillow would re-encode every page as JPEG q75; img2pdf embeds losslessly (review #1)."""
+        opts: ImageOptions = ctx.options  # type: ignore[assignment]
+        if ctx.source.key == "jpg":
+            _check_size_of(ctx.input_path, opts)
+            pages = [ctx.input_path.read_bytes()]  # embedded as-is: no second JPEG generation
+        else:
+            # PNG keeps alpha (img2pdf adds a soft mask); img2pdf itself refuses WebP with
+            # alpha, so everything goes through PNG first (review #18)
+            pages = list(_frames_as_png(ctx, opts))
+        ctx.cancel.raise_if_cancelled()
+        layout = img2pdf.get_fixed_dpi_layout_fun((opts.pdf_dpi, opts.pdf_dpi))
+        try:
+            data = img2pdf.convert(pages, layout_fun=layout,
+                                   rotation=img2pdf.Rotation.ifvalid)  # honours EXIF rotation
+        except Exception as exc:  # img2pdf raises plain ValueError and its own types
+            raise ConversionError(f"Kan geen PDF maken: {exc}") from exc
+        ctx.output_path.write_bytes(data)
+
+
+def _check_size(im: Image.Image, opts: ImageOptions) -> None:
+    """Checked from the header, before pixels load (review #9)."""
+    if im.width * im.height > opts.max_megapixels * 1_000_000:
+        raise ConversionError(
+            f"Afbeelding is groter dan {opts.max_megapixels} megapixel "
+            "(aan te passen in config.json)"
+        )
+
+
+def _check_size_of(path: Path, opts: ImageOptions) -> None:
+    try:
+        with Image.open(path) as im:
+            _check_size(im, opts)
+    except (Image.DecompressionBombError, UnidentifiedImageError, OSError) as exc:
+        raise ConversionError(f"Afbeelding kan niet worden gelezen: {exc}") from exc
+
+
+def _frames_as_png(ctx: ConversionContext, opts: ImageOptions) -> Iterator[bytes]:
+    """Every frame/page as a lossless PNG; CMYK and 16-bit are normalised as for PNG output."""
+    try:
+        with Image.open(ctx.input_path) as im:
+            _check_size(im, opts)
+            for frame in ImageSequence.Iterator(im):
+                ctx.cancel.raise_if_cancelled()
+                img = ImageOps.exif_transpose(frame)
+                icc = img.info.get("icc_profile")
+                before = _colour_space(img.mode)
+                if img.mode == "P":  # img2pdf is strict about palette transparency
+                    img = img.convert("RGBA" if "transparency" in img.info else "RGB")
+                img = _normalize_mode(img, "png", opts.flatten_background)
+                img.info.pop("icc_profile", None)
+                params: dict = {"compress_level": opts.png_compress_level}
+                if icc and _colour_space(img.mode) == before:
+                    params["icc_profile"] = icc
+                buf = io.BytesIO()
+                img.save(buf, format="PNG", **params)
+                yield buf.getvalue()
+    except (Image.DecompressionBombError, UnidentifiedImageError, OSError) as exc:
+        raise ConversionError(f"Afbeelding kan niet worden gelezen: {exc}") from exc
 
 
 def _is_high_bit_grey(mode: str) -> bool:

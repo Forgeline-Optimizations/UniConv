@@ -22,8 +22,10 @@
 - Step 7 (core/apps.py): find_app with env override, install dirs, PATH; tests: test_apps.py (6 + 2 CI-only audit tests); locally Chrome found, no LibreOffice
 - Phase 0 done: registry with providers, run_isolated, find_app, freeze_support; 349 passed per OS, step 7 browser audit passed on both runners; CI green https://github.com/Forgeline-Optimizations/UniConv/actions/runs/41554296346
 - Step 8 (pyproject.toml, __init__.py): version 0.2.0; img2pdf, vtracer, trimesh, scipy, networkx, lxml; dev pypdfium2, msoffcrypto-tool (installed: trimesh 5.2.0, vtracer 0.6.15, img2pdf 0.6.3, pikepdf 10.17); tests: test_version reads __version__, full suite passed
+- Step 9 (converters/image.py): image -> PDF via img2pdf, JPEG as-is, rest via PNG frames, multi-page, size check factored out (#1, #18); tests: 6 PDF tests in test_image.py (Flate, byte-identical JPEG, WebP alpha, 3-page GIF, EXIF portrait, CMYK/16-bit), full suite passed
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
+- Step 9: palette frames become RGB/RGBA before img2pdf, and a frame's ICC profile is dropped when its colour space changed (same rule as the raster path, review #4).
 **Left unfinished:** Phases 1-5 (steps 8-29).
 **Notes for next session:** local machine has Chrome + Edge, no LibreOffice (office tests
 only run in the CI LibreOffice job). Use `.venv` (Python 3.12). Resume from the first
