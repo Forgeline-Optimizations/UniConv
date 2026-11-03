@@ -79,7 +79,9 @@ needed.
   (`image`, `data`, `document`, `media`, `office`, `browser`) is validated by that
   provider's `Options`. The app writes `config.defaults.json` at start as a reference.
 
-## Current Sprint: 0.2: medium conversions
+## Current Sprint: 0.2: medium conversions - RELEASED as v0.2.0 on 2026-11-03
+**Next:** wait for the maintainer's Mac test of the release DMG; fixes go out as 0.2.1.
+
 **Goal:** implement `docs/extension-plan-0.2.md` (steps 1-29) on branch
 `feature/0.2-medium-conversions`: providers per family, lossless image PDF, PDF via Typst,
 Office/browser PDF via detected apps, vector (resvg, Typst, vtracer), new 3D family.
@@ -135,7 +137,8 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 - Sprint 2 - UI (steps 15-19, 37): done 2026-11-02.
 - Sprint 3 - Data and documents (steps 20-25): done 2026-11-02.
 - Sprint 4 - Audio and video (steps 26-27): done 2026-11-02.
-- Sprint 5 - Packaging and release (steps 28-33): done 2026-11-02 (not yet tagged).
+- Sprint 5 - Packaging and release (steps 28-33): done 2026-11-02, released as v0.1.0.
+- 0.2 - Medium conversions (extension plan steps 1-29): released as v0.2.0 on 2026-11-03.
 
 ## Module map
 | Module | Responsibility | Sprint | Status |
