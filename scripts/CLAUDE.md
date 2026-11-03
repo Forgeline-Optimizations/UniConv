@@ -1,8 +1,9 @@
 # Module: scripts
 
-**Status:** Done (Sprint 3).
-**Responsibility:** `fetch_binaries.py` downloads the Pandoc, ffmpeg and ffprobe builds pinned
-in [ADR-001](../.claude/decisions/ADR-001-pinned-binary-sources.md) for `win32-x86_64` or
+**Status:** Done (Sprint 3; Typst + resvg and tar support in 0.2).
+**Responsibility:** `fetch_binaries.py` downloads the Pandoc, ffmpeg, ffprobe, Typst and resvg
+builds pinned in [ADR-001](../.claude/decisions/ADR-001-pinned-binary-sources.md) and
+[ADR-002](../.claude/decisions/ADR-002-typst-resvg-and-detected-apps.md) for `win32-x86_64` or
 `darwin-arm64`, verifies SHA-256 while streaming, extracts the named zip members into a
 staging dir and renames it to `vendor/<platform_tag>/` (so a half-finished fetch never looks
 complete), sets `chmod +x` off Windows, and copies license files to `vendor/<tag>/licenses/`.
@@ -16,6 +17,10 @@ complete), sets `chmod +x` off Windows, and copies license files to `vendor/<tag
 - `platform_tag()` is duplicated from `uniconv.core.tools` on purpose: the script must run
   before `pip install` in CI and packaging.
 - The CI cache key hashes this file, so editing a pin invalidates the cached `vendor/`.
+- Archives are `.zip` or `.tar.*` (Typst for macOS is `.tar.xz`); only the named members are
+  read, a tar member must be a regular file (`extractfile()` would follow a symlink), so a
+  malicious archive cannot write outside `vendor/`. Tested in `tests/unit/test_fetch_binaries.py`.
+- resvg archives contain no license text: those live in `packaging/licenses/`.
 
 ## Upgrading a binary
 Change URL + sha256 here and in ADR-001 (or a superseding ADR), update
