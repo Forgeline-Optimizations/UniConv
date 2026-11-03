@@ -18,6 +18,7 @@
 - Step 3 (converters/formats.py, image/data/document.py): shared Format constants incl. new SVG/XLS/ODS/DOC/PPT(X)/ODP; tests: full suite 328 passed
 - Step 4 (core/registry.py): providers per family, shared formats, weak MIMEs, hints(), options per section; tests: test_registry rewritten (13 tests), full suite 334 passed
 - Step 5 (core/jobs.py, cli.py, ui/main_window.py, ui/app.py): options from the chosen provider, CLI shows hints, UI shows install hint (grey line or status when no targets), loss hint from find(); tests: full suite 334 passed
+- Step 6 (core/isolate.py): run_isolated with spawn, cancel, time-out, crash detection (also EOF without answer) (#3); tests: test_isolate.py (6) + _isolate_targets.py added, passed 3x in a row
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 **Left unfinished:** everything from step 1.
