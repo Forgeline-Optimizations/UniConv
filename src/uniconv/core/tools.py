@@ -57,11 +57,12 @@ def _last_meaningful_line(stderr: str) -> str:
 
 
 def run_tool(cmd: list[str], *, timeout_s: int, cancel: CancelToken,
-             on_stdout_line: Callable[[str], None] | None = None) -> str:
+             on_stdout_line: Callable[[str], None] | None = None,
+             cwd: Path | None = None) -> str:
     """Run an external tool; returns stderr. Raises ConversionError / ConversionCancelled."""
     try:
         proc = subprocess.Popen(  # list argv, never shell=True (ruff S602 enforces this)
-            cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cmd, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, encoding="utf-8", errors="replace", creationflags=_NO_WINDOW,
         )
     except OSError as exc:

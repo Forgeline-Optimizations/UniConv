@@ -91,7 +91,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 - [x] 9 `converters/image.py`: image to PDF via img2pdf (#1, #18)
 - [x] 10 `scripts/fetch_binaries.py`: Typst + resvg, `.tar.xz` (#19)
 - [x] 11 ADR-002: Typst, resvg and detected apps
-- [ ] 12 `core/tools.py` `cwd`, `converters/document.py` PDF via Typst (#25, #11, #12)
+- [x] 12 `core/tools.py` `cwd`, `converters/document.py` PDF via Typst (#25, #11, #12)
 
 **Phase 2 - Office and browser to PDF**
 - [ ] 13 `converters/office.py` + `ConversionTimeout` (#4, #5, #13, #14, #17)

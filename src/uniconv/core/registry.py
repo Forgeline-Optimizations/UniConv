@@ -142,14 +142,19 @@ class Registry:
         return {s: o().model_dump(mode="json") for s, o in self._options.items()}
 
 
-def build_default_registry() -> Registry:
+def default_providers() -> list[Converter]:
+    """Every provider, in UI order and priority (earlier wins within a family)."""
     from uniconv.converters.data import DataConverter
     from uniconv.converters.document import DocumentConverter
     from uniconv.converters.image import ImageConverter
     from uniconv.converters.media import MediaConverter
 
+    return [ImageConverter(), DataConverter(), DocumentConverter(), MediaConverter()]
+
+
+def build_default_registry() -> Registry:
     reg = Registry()
-    # All providers are registered, available or not; order = UI order and priority.
-    for conv in (ImageConverter(), DataConverter(), DocumentConverter(), MediaConverter()):
+    # All providers are registered, available or not; unavailable ones still detect formats.
+    for conv in default_providers():
         reg.register(conv)
     return reg

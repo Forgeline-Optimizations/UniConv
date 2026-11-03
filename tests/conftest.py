@@ -10,8 +10,9 @@ import pytest
 from PIL import Image
 
 from uniconv.config import AppConfig, PathsConfig
+from uniconv.core.apps import find_app
 from uniconv.core.jobs import JobRunner
-from uniconv.core.registry import Registry, build_default_registry
+from uniconv.core.registry import Registry, build_default_registry, default_providers
 from uniconv.core.tools import find_tool
 from uniconv.core.workspace import Workspace
 
@@ -49,11 +50,12 @@ _PIL_FORMAT = {"jpg": "JPEG", "png": "PNG", "webp": "WEBP", "gif": "GIF", "bmp":
 
 
 def pytest_collection_modifyitems(config, items):
-    missing = {name: find_tool(name) is None for name in ("pandoc", "ffmpeg")}
+    missing = {name: find_tool(name) is None for name in ("pandoc", "ffmpeg", "typst", "resvg")}
+    missing |= {name: find_app(name) is None for name in ("libreoffice", "browser")}
     for item in items:
         for name, absent in missing.items():
             if absent and item.get_closest_marker(f"needs_{name}"):
-                item.add_marker(pytest.mark.skip(reason=f"{name} not found (fetch_binaries.py)"))
+                item.add_marker(pytest.mark.skip(reason=f"{name} not found"))
 
 
 @pytest.fixture
@@ -64,6 +66,22 @@ def cfg(tmp_path: Path) -> AppConfig:
 @pytest.fixture
 def registry() -> Registry:
     return build_default_registry()
+
+
+@pytest.fixture
+def registry_without() -> Callable[..., Registry]:
+    """A default registry in which the given provider classes are registered as unavailable,
+    so fallback routes are testable on machines that do have LibreOffice or Chrome."""
+
+    def _make(*classes: type) -> Registry:
+        reg = Registry()
+        for conv in default_providers():
+            if isinstance(conv, classes):
+                conv.available = lambda: False  # type: ignore[method-assign]
+            reg.register(conv)
+        return reg
+
+    return _make
 
 
 @pytest.fixture

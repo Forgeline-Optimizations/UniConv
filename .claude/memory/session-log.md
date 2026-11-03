@@ -26,9 +26,11 @@
 - Step 10 (scripts/fetch_binaries.py): Typst 0.15.1 + resvg 0.49.0 for both platforms, tar support via extractfile() (#19); all 4 plan hashes matched GitHub digests AND were re-verified by downloading both tags locally; tests: test_fetch_binaries.py (4) added
 - Step 10 follow-up: test caught extractfile() following a symlink member; script now checks getmember().isfile() first; test_fetch_binaries 4 passed
 - Step 11 (.claude/decisions/ADR-002-typst-resvg-and-detected-apps.md): pins, bundle-vs-detect rule, alternatives; tests: n/a (docs)
+- Step 12 (core/tools.py cwd, converters/document.py): two-step PDF route, A4/nl options, missing-image warnings, loss hints naming LibreOffice/browser (#25, #11, #12); input path resolved because cwd=jobdir; tests: test_pdf.py (9), test_cwd_is_used; step 26 partly: markers needs_typst/resvg/libreoffice/browser, registry_without() fixture, registry.default_providers(); full suite passed. Windows path audit passed locally (../ and absolute images)
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 - Step 9: palette frames become RGB/RGBA before img2pdf, and a frame's ICC profile is dropped when its colour space changed (same rule as the raster path, review #4).
+- Step 12: registry.default_providers() added so the registry_without() fixture (step 26) can rebuild the default provider list; input path is resolve()d in _to_pdf because Pandoc runs with cwd=jobdir.
 **Left unfinished:** Phases 1-5 (steps 8-29).
 **Notes for next session:** local machine has Chrome + Edge, no LibreOffice (office tests
 only run in the CI LibreOffice job). Use `.venv` (Python 3.12). Resume from the first

@@ -73,3 +73,10 @@ def test_find_tool_prefers_bundled_copy(monkeypatch, tmp_path):
         assert tools.find_tool("definitely-not-installed-xyz") is None
     finally:
         tools.find_tool.cache_clear()
+
+
+def test_cwd_is_used(tmp_path):
+    lines = []
+    tools.run_tool([PY, "-c", "import os; print(os.getcwd())"], timeout_s=30,
+                   cancel=CancelToken(), on_stdout_line=lines.append, cwd=tmp_path)
+    assert lines and lines[0].lower() == str(tmp_path).lower()

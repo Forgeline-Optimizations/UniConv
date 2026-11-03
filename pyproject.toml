@@ -64,4 +64,8 @@ testpaths = ["tests"]
 markers = [
   "needs_pandoc: skipped when the pandoc binary is missing",
   "needs_ffmpeg: skipped when the ffmpeg binary is missing",
+  "needs_typst: skipped when the typst binary is missing",
+  "needs_resvg: skipped when the resvg binary is missing",
+  "needs_libreoffice: skipped when LibreOffice is not installed",
+  "needs_browser: skipped when no Chrome/Edge/Chromium is installed",
 ]
