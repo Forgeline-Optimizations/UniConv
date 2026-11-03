@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "uniconv"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local desktop app that converts one file at a time within a format family."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -21,13 +21,21 @@ dependencies = [
   "filetype>=1.2",
   "platformdirs>=4.2",
   "pydantic>=2.7",
+  "img2pdf>=0.6.3",     # lossless image -> PDF; pulls in pikepdf (MPL-2.0)
+  "vtracer>=0.6.15",    # raster -> SVG tracing
+  "trimesh>=5.2",       # 3D formats
+  "scipy>=1.13",        # trimesh needs it for OBJ/GLB normals
+  "networkx>=3.3",      # trimesh: 3MF and scene graphs
+  "lxml>=5.2",          # trimesh: 3MF
 ]
 
 [project.urls]
 Homepage = "https://github.com/Forgeline-Optimizations/UniConv"
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.6"]
+dev = ["pytest>=8", "pytest-qt>=4.4", "ruff>=0.6",
+       "pypdfium2>=5.9",          # render PDFs in tests to check pixels
+       "msoffcrypto-tool>=5.4"]   # make a password-protected .docx in tests
 build = ["pyinstaller>=6.6"]
 
 [project.scripts]
@@ -47,7 +55,7 @@ ignore = ["S101"]  # assert is fine in tests
 
 [tool.ruff.lint.per-file-ignores]
 # Tests and dev scripts start helper processes on purpose; production code goes through core/tools.py.
-"tests/**" = ["S603", "S607", "S108"]
+"tests/**" = ["S603", "S607", "S108", "S105", "S106", "S107"]  # test passwords are fine
 "scripts/**" = ["S310"]
 "src/uniconv/core/tools.py" = ["S603"]
 
@@ -56,4 +64,8 @@ testpaths = ["tests"]
 markers = [
   "needs_pandoc: skipped when the pandoc binary is missing",
   "needs_ffmpeg: skipped when the ffmpeg binary is missing",
+  "needs_typst: skipped when the typst binary is missing",
+  "needs_resvg: skipped when the resvg binary is missing",
+  "needs_libreoffice: skipped when LibreOffice is not installed",
+  "needs_browser: skipped when no Chrome/Edge/Chromium is installed",
 ]

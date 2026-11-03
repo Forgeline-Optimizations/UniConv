@@ -17,10 +17,11 @@ from uniconv.paths import config_file, resolve_work_dir
 
 def _print_formats(registry: Registry) -> None:
     for family, label in registry.families():
-        conv = registry.converter(family)
         print(f"{label} ({family})")
-        for src in conv.sources():
-            print(f"  {src:6} -> {', '.join(conv.targets(src))}")
+        for src in registry.sources(family):
+            targets = registry.targets(family, src)
+            hint = "; ".join(registry.hints(family, src))
+            print(f"  {src:6} -> {', '.join(targets) or '-'}" + (f"   ({hint})" if hint else ""))
 
 
 def _guess_family(registry: Registry, path: Path) -> str | None:

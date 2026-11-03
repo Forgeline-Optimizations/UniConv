@@ -128,3 +128,38 @@ def test_cancel_button_cancels(window, qtbot, registry, tmp_path):
     qtbot.waitUntil(lambda: window._worker is None, timeout=10_000)
     assert window.status_label.text() == "Geannuleerd"
     assert not src.with_suffix(".slowout").exists()
+
+
+# ---- 0.2: providers -------------------------------------------------------------------
+
+def test_five_family_buttons(window):
+    labels = [b.text() for b in window.family_buttons]
+    expected = ["Afbeelding", "Data", "Document", "Audio/video", "3D-model"]
+    assert [x for x in expected if x in labels] == labels  # order kept; missing tools hide one
+    assert labels[0] == "Afbeelding" and labels[-1] == "3D-model"
+
+
+def test_hint_when_no_targets(qtbot, registry_without, runner, cfg, tmp_path, make_sample):
+    """Without LibreOffice a PowerPoint has no targets; the status says what to install."""
+    from uniconv.converters.office import OfficeDocumentConverter
+    from uniconv.core.tools import find_tool
+
+    if find_tool("pandoc") is None:
+        pytest.skip("pandoc missing: cannot make a PPTX sample")
+    reg = registry_without(OfficeDocumentConverter)
+    win = MainWindow(reg, runner, cfg, config_path=tmp_path / "cfg2" / "config.json")
+    qtbot.addWidget(win)
+    win._select_family("document")
+    win.drop_zone.file_chosen.emit(make_sample("pptx"))
+    assert win.target_combo.count() == 0
+    assert not win.convert_btn.isEnabled()
+    assert "LibreOffice" in win.status_label.text()
+
+
+def test_loss_hint_from_chosen_provider(window, make_sample):
+    """SVG -> JPG runs on VectorConverter, so its hint ('vaste afmetingen') must show."""
+    if not window.registry.targets("image", "svg"):
+        pytest.skip("resvg missing")
+    window.drop_zone.file_chosen.emit(make_sample("svg"))
+    window.target_combo.setCurrentIndex(_targets(window).index("jpg"))
+    assert "vaste afmetingen" in window.loss_label.text()

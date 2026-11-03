@@ -6,7 +6,7 @@ import pytest
 
 from uniconv.core import tools
 from uniconv.core.converter import CancelToken
-from uniconv.core.errors import ConversionCancelled, ConversionError
+from uniconv.core.errors import ConversionCancelled, ConversionError, ConversionTimeout
 
 PY = sys.executable
 
@@ -37,7 +37,7 @@ def test_nonzero_exit_reports_last_stderr_line():
 
 def test_timeout_kills_process_quickly():
     start = time.monotonic()
-    with pytest.raises(ConversionError, match="langer dan 1 s"):
+    with pytest.raises(ConversionTimeout, match="langer dan 1 s"):  # a ConversionError too
         tools.run_tool([PY, "-c", "import time; time.sleep(30)"], timeout_s=1,
                        cancel=CancelToken())
     assert time.monotonic() - start < 3
@@ -73,3 +73,37 @@ def test_find_tool_prefers_bundled_copy(monkeypatch, tmp_path):
         assert tools.find_tool("definitely-not-installed-xyz") is None
     finally:
         tools.find_tool.cache_clear()
+
+
+def test_cwd_is_used(tmp_path):
+    lines = []
+    tools.run_tool([PY, "-c", "import os; print(os.getcwd())"], timeout_s=30,
+                   cancel=CancelToken(), on_stdout_line=lines.append, cwd=tmp_path)
+    assert lines and lines[0].lower() == str(tmp_path).lower()
+
+
+def test_timeout_is_a_conversion_error():
+    assert issubclass(ConversionTimeout, ConversionError)
+
+
+def test_returns_when_a_grandchild_keeps_the_pipes_open():
+    """Browsers leave helper processes (crashpad) behind that inherit stdout/stderr; the
+    tool has exited, so run_tool must not wait for EOF on the pipes forever."""
+    code = ("import subprocess, sys; "
+            "subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(20)']); "
+            "print('parent done')")
+    start = time.monotonic()
+    tools.run_tool([PY, "-c", code], timeout_s=60, cancel=CancelToken())
+    assert time.monotonic() - start < 10
+
+
+def test_error_line_wins_over_a_code_frame():
+    """Typst ends its diagnostics with a caret line; the user needs the 'error:' line."""
+    stderr = ("error: failed to load linked image foto.png in SVG (file not found)\n"
+              "  \u250c\u2500 in.svg:1:0\n  \u2502\n1 \u2502 <svg ...>\n  \u2502 ^^^^^^^^^^\n\n")
+    assert tools._last_meaningful_line(stderr).startswith("error: failed to load linked image")
+
+
+def test_noise_lines_are_skipped():
+    assert tools._last_meaningful_line("real problem\n  \u2502 ^^^^\n") == "real problem"
+    assert tools._last_meaningful_line("Bad input\nConversion failed!\n") == "Bad input"

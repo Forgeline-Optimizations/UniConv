@@ -79,7 +79,7 @@ class JobRunner:
             ctx = ConversionContext(
                 input_path=src, output_path=work / f"out{target.extensions[0]}",
                 source=source, target=target,
-                options=self.registry.options_for(job.family, self.cfg),
+                options=self.registry.options_for(conv, self.cfg),
                 timeout_s=self.cfg.limits.timeout_seconds, cancel=cancel,
                 on_progress=lambda p: on_progress(i, p),
             )

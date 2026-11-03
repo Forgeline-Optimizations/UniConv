@@ -4,7 +4,7 @@ UniConv is licensed under the GNU General Public License v3.0 or later (see `LIC
 The installers bundle the components below. Their license texts ship in the app folder
 (`LICENSE`, `licenses/`) and are linked here together with the source code of the exact
 version used. Versions of the external tools are pinned in `scripts/fetch_binaries.py`
-(see `.claude/decisions/ADR-001-pinned-binary-sources.md`).
+(see `.claude/decisions/ADR-001-pinned-binary-sources.md` and `ADR-002`).
 
 ## Bundled programs
 
@@ -13,6 +13,8 @@ version used. Versions of the external tools are pinned in `scripts/fetch_binari
 | Pandoc | 3.13 | GPL-2.0-or-later | https://github.com/jgm/pandoc/tree/3.13 |
 | FFmpeg (ffmpeg, ffprobe), Windows build by gyan.dev | 9.0.2 | GPL-3.0-or-later (built with `--enable-gpl --enable-version3`) | https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz, build scripts and library list: https://www.gyan.dev/ffmpeg/builds/ |
 | FFmpeg (ffmpeg, ffprobe), macOS arm64 build by Martin Riedl | 9.0.2 | GPL-3.0-or-later (built with `--enable-gpl --enable-version3`) | https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz, build scripts: https://gitlab.com/martinr92/ffmpeg |
+| Typst | 0.15.1 | Apache-2.0 (`licenses/typst-LICENSE.txt`, `licenses/typst-NOTICE.txt`) | https://github.com/typst/typst/tree/v0.15.1 |
+| resvg | 0.49.0 | Apache-2.0 OR MIT (`licenses/resvg-LICENSE-*.txt`) | https://github.com/linebender/resvg/tree/v0.49.0 |
 
 The FFmpeg builds statically include, among others, x264 (GPL-2.0-or-later), libvpx
 (BSD-3-Clause), Opus (BSD-3-Clause), LAME (LGPL-2.0-or-later) and libvorbis (BSD-3-Clause).
@@ -44,9 +46,27 @@ The complete list of libraries and versions per build is in `licenses/ffmpeg-REA
 | python-dateutil | 4.0.0 | BSD-3-Clause / Apache-2.0 | https://github.com/dateutil/dateutil |
 | tzdata | 2026.6 | Apache-2.0 | https://github.com/python/tzdata |
 | typing-extensions, annotated-types, typing-inspection | see wheel | PSF-2.0 / MIT | https://pypi.org |
+| img2pdf | 0.6.3 | LGPL-3.0-or-later | https://gitlab.mister-muffin.de/josch/img2pdf |
+| pikepdf | 10.17.0 | MPL-2.0 | https://github.com/pikepdf/pikepdf |
+| qpdf (inside pikepdf) | bundled | Apache-2.0 | https://github.com/qpdf/qpdf |
+| vtracer | 0.6.15 | MIT | https://github.com/visioncortex/vtracer |
+| trimesh | 5.2.0 | MIT | https://github.com/mikedh/trimesh |
+| SciPy | 1.18.1 | BSD-3-Clause (bundles further permissive libraries) | https://github.com/scipy/scipy |
+| NetworkX | 3.7 | BSD-3-Clause | https://github.com/networkx/networkx |
+| lxml (with libxml2, libxslt) | 6.1.3 | BSD-3-Clause (libxml2/libxslt: MIT) | https://github.com/lxml/lxml |
 
 The application is frozen with PyInstaller 6 (GPL-2.0-or-later with the bootloader
 exception, which permits distributing the bundled app under any license).
+
+All components are compatible with GPL-3.0-or-later. For img2pdf (LGPL-3.0) and pikepdf
+(MPL-2.0) the license text and a source link suffice; they are unmodified.
+
+## Detected, not bundled
+
+LibreOffice and Chrome / Edge / Chromium are **not** included in UniConv. When the user has
+installed one of them, UniConv starts it as a separate program for Office-to-PDF and
+HTML-to-PDF conversions (see `src/uniconv/core/apps.py`). Their licenses apply to the copy
+the user installed.
 
 ## Obtaining the source
 

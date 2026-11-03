@@ -1,6 +1,7 @@
 """Find and run Pandoc/ffmpeg: argument list, never a shell, always a timeout, cancellable."""
 
 import platform
+import re
 import shutil
 import subprocess
 import sys
@@ -11,11 +12,13 @@ from functools import cache
 from pathlib import Path
 
 from uniconv.core.converter import CancelToken
-from uniconv.core.errors import ConversionCancelled, ConversionError
+from uniconv.core.errors import ConversionCancelled, ConversionError, ConversionTimeout
 from uniconv.paths import install_dir, is_frozen
 
 # Without this a console window flashes up for every conversion in the windowed Windows build.
 _NO_WINDOW = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+_PIPE_GRACE_S = 3
+_FRAME_NOISE = re.compile(r"[\s\d│|^~─┌└]*")  # lines of a compiler-style code frame
 _ARCH = {"amd64": "x86_64", "x86_64": "x86_64", "arm64": "arm64", "aarch64": "arm64"}
 
 
@@ -48,20 +51,26 @@ def _pump(stream: Iterable[str], on_line: Callable[[str], None] | None) -> None:
 
 
 def _last_meaningful_line(stderr: str) -> str:
-    """The final non-noise stderr line is usually the actual error message."""
-    for line in reversed(stderr.splitlines()):
-        line = line.strip()
-        if line and not line.startswith(("Conversion failed", "Exiting with")):
+    """The actual error message: an explicit 'error:' line (Typst, LibreOffice) wins; else
+    the final line that is not noise (ffmpeg summaries, Typst's code-frame carets)."""
+    lines = [line.strip() for line in stderr.splitlines()]
+    errors = [line for line in lines if line.lower().startswith("error:")]
+    if errors:
+        return errors[-1]
+    for line in reversed(lines):
+        if (line and not _FRAME_NOISE.fullmatch(line)
+                and not line.startswith(("Conversion failed", "Exiting with"))):
             return line
     return ""
 
 
 def run_tool(cmd: list[str], *, timeout_s: int, cancel: CancelToken,
-             on_stdout_line: Callable[[str], None] | None = None) -> str:
+             on_stdout_line: Callable[[str], None] | None = None,
+             cwd: Path | None = None) -> str:
     """Run an external tool; returns stderr. Raises ConversionError / ConversionCancelled."""
     try:
         proc = subprocess.Popen(  # list argv, never shell=True (ruff S602 enforces this)
-            cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cmd, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             text=True, encoding="utf-8", errors="replace", creationflags=_NO_WINDOW,
         )
     except OSError as exc:
@@ -81,10 +90,12 @@ def run_tool(cmd: list[str], *, timeout_s: int, cancel: CancelToken,
             t_out.join(1)
             if cancel.cancelled:
                 raise ConversionCancelled("Conversie geannuleerd")
-            raise ConversionError(f"Conversie duurde langer dan {timeout_s} s en is gestopt")
+            raise ConversionTimeout(f"Conversie duurde langer dan {timeout_s} s en is gestopt")
         time.sleep(0.1)
-    t_err.join()
-    t_out.join()
+    # The tool has exited, but helpers it left behind (a browser's crashpad) may hold the
+    # pipes open; EOF could then take forever. Everything the tool wrote is read by now.
+    t_err.join(_PIPE_GRACE_S)
+    t_out.join(_PIPE_GRACE_S)
     stderr = "".join(err_lines)
     if proc.returncode != 0:
         raise ConversionError(

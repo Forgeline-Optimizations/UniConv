@@ -4,7 +4,7 @@
 import sys
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_dynamic_libs
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 ROOT = Path(SPECPATH).parent
 sys.path.insert(0, str(ROOT / "src"))
@@ -22,7 +22,9 @@ datas = [
     (str(ROOT / "LICENSE"), "."),
     (str(ROOT / "THIRD_PARTY_LICENSES.md"), "."),
     (str(vendor / "licenses"), "licenses"),
+    (str(ROOT / "packaging" / "licenses"), "licenses"),  # resvg ships none in its zip
 ]
+datas += collect_data_files("trimesh")  # trimesh/resources/*: glTF/3MF templates
 icon = ROOT / ("packaging/macos/icon.icns" if sys.platform == "darwin"
                else "packaging/windows/icon.ico")
 
@@ -50,6 +52,7 @@ if sys.platform == "darwin":
             "CFBundleShortVersionString": __version__,
             "CFBundleVersion": __version__,
             "NSHighResolutionCapable": True,
-            "LSMinimumSystemVersion": "12.0",
+            # PySide6 >= 6.10, pikepdf 10 and scipy wheels on macos-latest need macOS 14 (#8)
+            "LSMinimumSystemVersion": "14.0",
         },
     )

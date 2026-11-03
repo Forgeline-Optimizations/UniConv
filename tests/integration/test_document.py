@@ -79,5 +79,5 @@ def test_broken_docx_fails_readably(runner, tmp_path, out_dir):
 
 
 def test_txt_is_target_only(registry):
-    assert "txt" not in registry.converter("document").sources()
+    assert "txt" not in registry.sources("document")
     assert "txt" in registry.targets("document", "md")

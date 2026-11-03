@@ -7,6 +7,7 @@ from uniconv.core.errors import (
     UnsupportedFormatError,
     WrongFamilyError,
 )
+from uniconv.core.tools import find_tool
 
 
 class _Options(BaseModel):
@@ -84,5 +85,31 @@ def test_filetype_mime_matches_declared_format(registry, make_sample, key):
     kind = filetype.guess(str(src))
     assert kind is not None, f"filetype does not recognise {key}"
     assert kind.mime in registry.format(key).mimes
-    family = next(f for f, _ in registry.families() if key in registry.converter(f).sources())
+    family = next(f for f, _ in registry.families() if key in registry.sources(f))
     assert registry.detect(src, family).key == key
+
+
+def test_password_protected_docx_stays_docx(registry, tmp_path):
+    """Review #13: filetype reports the OLE container as PowerPoint; the extension wins."""
+    if find_tool("pandoc") is None:
+        pytest.skip("pandoc missing")
+    from ..conftest import make_protected_docx
+
+    src = make_protected_docx(tmp_path / "geheim.docx")
+    assert registry.detect(src, "document").key == "docx"
+
+
+def test_pdf_is_only_a_target_in_every_family(registry, tmp_path):
+    f = tmp_path / "doc.pdf"
+    f.write_bytes(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    for family, _ in registry.families():
+        with pytest.raises(UnsupportedConversionError, match="alleen als doel"):
+            registry.detect(f, family)
+
+
+@pytest.mark.needs_libreoffice
+@pytest.mark.parametrize(("key", "family"), [("doc", "document"), ("xls", "data"),
+                                             ("ppt", "document"), ("ods", "data"),
+                                             ("odp", "document"), ("pptx", "document")])
+def test_real_office_files_are_detected(registry, make_sample, key, family):
+    assert registry.detect(make_sample(key), family).key == key

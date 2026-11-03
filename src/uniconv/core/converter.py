@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import ClassVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from uniconv.core.errors import ConversionCancelled
 
@@ -59,11 +59,21 @@ class ConversionContext:
             self.warnings.append(message)
 
 
+class NoOptions(BaseModel):
+    """For providers without settings; still validated, so typos in config.json are caught."""
+    model_config = ConfigDict(extra="forbid")
+
+
 class Converter(ABC):
     family: ClassVar[str]                   # "image"
     family_label: ClassVar[str]             # "Afbeelding"
     formats: ClassVar[tuple[Format, ...]]
     Options: ClassVar[type[BaseModel]]      # its section under "defaults" in config.json
+    options_key: ClassVar[str | None] = None   # section under "defaults"; None = family
+    install_hint: ClassVar[str | None] = None  # shown when available() is False
+
+    def config_section(self) -> str:
+        return self.options_key or self.family
 
     def available(self) -> bool:
         """False when a required external tool is missing; the family is then hidden."""

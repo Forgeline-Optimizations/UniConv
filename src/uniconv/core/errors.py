@@ -21,6 +21,10 @@ class ConversionError(UniconvError):
     """Engine failed, content can't be mapped, or the result can't be written."""
 
 
+class ConversionTimeout(ConversionError):
+    """The engine exceeded its time limit; callers may replace the message with a hint."""
+
+
 class ToolMissingError(UniconvError):
     """pandoc/ffmpeg not found."""
 

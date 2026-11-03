@@ -1,6 +1,6 @@
 import pytest
 
-from uniconv import cli
+from uniconv import __version__, cli
 from uniconv.__main__ import main
 
 
@@ -10,9 +10,20 @@ def _isolated_paths(monkeypatch, tmp_path):
     monkeypatch.setattr(cli, "resolve_work_dir", lambda cfg: tmp_path / "work")
 
 
+def test_main_calls_freeze_support_first(monkeypatch, capsys):
+    """Review #7: without it the frozen app re-spawns itself for every worker process."""
+    import multiprocessing
+
+    calls = []
+    monkeypatch.setattr(multiprocessing, "freeze_support", lambda: calls.append("freeze"))
+    monkeypatch.setattr("sys.argv", ["uniconv", "--version"])
+    assert main() == 0
+    assert calls == ["freeze"]
+
+
 def test_version(capsys):
     assert main(["--version"]) == 0
-    assert capsys.readouterr().out.strip() == "0.1.0"
+    assert capsys.readouterr().out.strip() == __version__
 
 
 def test_formats_lists_image_family(capsys):

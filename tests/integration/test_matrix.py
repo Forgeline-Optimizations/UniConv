@@ -11,7 +11,7 @@ _REG = build_default_registry()
 PAIRS = [
     (family, src, dst)
     for family, _ in _REG.families()
-    for src in _REG.converter(family).sources()
+    for src in _REG.sources(family)
     for dst in _REG.targets(family, src)
 ]
 # filetype cannot tell these apart from their container; checked by extension only.
