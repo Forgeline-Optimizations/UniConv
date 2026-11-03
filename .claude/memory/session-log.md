@@ -14,6 +14,7 @@
 - Setup: plan file moved from `docs/Uitbreidingsplan UniConv 0.2, gemiddelde conversies.md`
   to `docs/extension-plan-0.2.md`; branch created; checklist in CLAUDE.md.
 - Step 1 (__main__.py): freeze_support() as first call (#7); tests: added test_main_calls_freeze_support_first, test_cli 5 passed
+- Step 2 (core/converter.py): NoOptions, options_key, install_hint, config_section(); tests: test_config_section_defaults_to_family added, test_registry 7 passed
 **Decisions made:** none yet
 **Left unfinished:** everything from step 1.
 **Notes for next session:** local machine has Chrome + Edge, no LibreOffice (office tests

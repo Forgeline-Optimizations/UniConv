@@ -43,3 +43,17 @@ def test_options_error_names_the_config_key(registry):
 
 def test_default_options_cover_every_family(registry):
     assert set(registry.default_options()) == {f for f, _ in registry.families()}
+
+
+def test_config_section_defaults_to_family():
+    from uniconv.core.converter import NoOptions
+
+    conv = ImageConverter()
+    assert conv.config_section() == "image"
+
+    class Keyed(ImageConverter):
+        options_key = "custom"
+
+    assert Keyed().config_section() == "custom"
+    with pytest.raises(ValueError):
+        NoOptions.model_validate({"typo": 1})
