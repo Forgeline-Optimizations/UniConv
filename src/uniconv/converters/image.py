@@ -4,7 +4,8 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from pillow_heif import register_heif_opener
 from pydantic import BaseModel, ConfigDict, Field
 
-from uniconv.core.converter import ConversionContext, Converter, Format
+from uniconv.converters.formats import BMP, GIF, HEIC, JPG, PDF, PNG, TIFF, WEBP
+from uniconv.core.converter import ConversionContext, Converter
 from uniconv.core.errors import ConversionError
 
 register_heif_opener()
@@ -34,16 +35,7 @@ class ImageConverter(Converter):
     family = "image"
     family_label = "Afbeelding"
     Options = ImageOptions
-    formats = (
-        Format("jpg", "JPEG", (".jpg", ".jpeg"), ("image/jpeg",)),
-        Format("png", "PNG", (".png",), ("image/png",)),
-        Format("webp", "WebP", (".webp",), ("image/webp",)),
-        Format("gif", "GIF", (".gif",), ("image/gif",)),
-        Format("bmp", "BMP", (".bmp",), ("image/bmp",)),
-        Format("tiff", "TIFF", (".tif", ".tiff"), ("image/tiff",)),
-        Format("heic", "HEIC", (".heic", ".heif"), ("image/heic", "image/heif"), target=False),
-        Format("pdf", "PDF", (".pdf",), ("application/pdf",), source=False),
-    )
+    formats = (JPG, PNG, WEBP, GIF, BMP, TIFF, HEIC, PDF)
 
     def expected_losses(self, source: str, target: str) -> list[str]:
         out = []

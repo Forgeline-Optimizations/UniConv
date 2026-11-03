@@ -3,7 +3,8 @@
 import yaml
 from pydantic import BaseModel, ConfigDict
 
-from uniconv.core.converter import ConversionContext, Converter, Format
+from uniconv.converters.formats import DOCX, EPUB, HTML, MD, ODT, RTF, TEX, TXT
+from uniconv.core.converter import ConversionContext, Converter
 from uniconv.core.errors import ToolMissingError
 from uniconv.core.tools import find_tool, run_tool
 
@@ -23,18 +24,7 @@ class DocumentConverter(Converter):
     family = "document"
     family_label = "Document"
     Options = DocumentOptions
-    formats = (
-        Format("md", "Markdown", (".md", ".markdown")),
-        Format("html", "HTML", (".html", ".htm")),
-        Format("tex", "LaTeX", (".tex",)),
-        Format("docx", "Word", (".docx",),
-               ("application/vnd.openxmlformats-officedocument.wordprocessingml.document",)),
-        Format("odt", "OpenDocument", (".odt",), ("application/vnd.oasis.opendocument.text",)),
-        Format("epub", "EPUB", (".epub",), ("application/epub+zip",)),
-        Format("rtf", "RTF", (".rtf",), ("application/rtf", "text/rtf")),
-        # plain text has no structure to read, so it is a target only
-        Format("txt", "Platte tekst", (".txt",), source=False),
-    )
+    formats = (MD, HTML, TEX, DOCX, ODT, EPUB, RTF, TXT)
 
     def available(self) -> bool:
         return find_tool("pandoc") is not None

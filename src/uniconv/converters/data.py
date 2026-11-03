@@ -18,7 +18,8 @@ import xmltodict
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
-from uniconv.core.converter import ConversionContext, Converter, Format
+from uniconv.converters.formats import CSV, JSON, TOML, XLSX, XML, YAML
+from uniconv.core.converter import ConversionContext, Converter
 from uniconv.core.errors import ConversionError
 
 
@@ -37,15 +38,7 @@ class DataConverter(Converter):
     family = "data"
     family_label = "Data"
     Options = DataOptions
-    formats = (
-        Format("csv", "CSV", (".csv",)),
-        Format("xlsx", "Excel", (".xlsx",),
-               ("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",)),
-        Format("json", "JSON", (".json",)),
-        Format("yaml", "YAML", (".yaml", ".yml")),
-        Format("toml", "TOML", (".toml",)),
-        Format("xml", "XML", (".xml",)),
-    )
+    formats = (CSV, XLSX, JSON, YAML, TOML, XML)
 
     def expected_losses(self, source: str, target: str) -> list[str]:
         out = []

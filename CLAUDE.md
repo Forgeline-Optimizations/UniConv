@@ -80,7 +80,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 **Phase 0 - foundation**
 - [x] 1 `__main__.py`: `multiprocessing.freeze_support()` first (#7)
 - [x] 2 `core/converter.py`: `NoOptions`, `options_key`, `install_hint`, `config_section()`
-- [ ] 3 `converters/formats.py`: shared `Format` constants
+- [x] 3 `converters/formats.py`: shared `Format` constants
 - [ ] 4 `core/registry.py`: providers per family, weak MIMEs, `hints()` (#6, #13)
 - [ ] 5 `core/jobs.py`, `cli.py`, `ui/main_window.py`, `ui/app.py`: new registry API
 - [ ] 6 `core/isolate.py`: `run_isolated()` (#3)
