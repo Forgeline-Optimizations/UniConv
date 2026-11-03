@@ -35,6 +35,7 @@
 - Step 16 (converters/vector.py, converters/image.py): resvg render with size guard + font-warning parsing, Typst vector PDF with svgz/linked-image fallback, vtracer tracing in run_isolated with downscale; encode_raster() shared; 4 new ImageOptions fields (#2, #3, #9, #10, #26); manual run on Windows: svg->png 512x256, ->jpg, ->pdf ok; tests: test_vector_helpers.py (23)
 - Step 17 (core/registry.py): VectorConverter registered; tests: test_vector.py (12: 512x256 scaling, huge SVG refused #2, font never lost silently #9, broken SVG, svgz->png/pdf, vector PDF 180pt, linked image fallback #26, generic font warning #10, logo trace, 4MP downscale #3, cancel trace <1 s), SVG sample in conftest; run_tool error messages now prefer 'error:' lines and skip code-frame noise (Typst), tests added; full suite passed
 - Phase 3 done: VectorConverter (resvg, Typst, vtracer in run_isolated); 439 passed per OS; CI green https://github.com/Forgeline-Optimizations/UniConv/actions/runs/41558778800
+- Step 18 (converters/model3d.py): Model3DConverter, 7 formats, worker in run_isolated, merge/axes/texture loss hints (#16), worker returns warnings (merged N objects), empty mesh refused; tests: test_model3d_worker.py (2)
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 - Step 9: palette frames become RGB/RGBA before img2pdf, and a frame's ICC profile is dropped when its colour space changed (same rule as the raster path, review #4).
@@ -45,6 +46,7 @@
 - Step 13 (after audit): LibreOffice profile lives in tempfile.mkdtemp('uniconv-lo-') and is removed in finally, not in the job dir (Windows MAX_PATH); non-zero soffice exits go through the same Dutch error analysis; missing PDFs log LibreOffice's output.
 - Step 16: on Windows resvg falls back to an installed font when a family is missing (text drawn, no stderr), so review #9's silent loss only happens on font-less systems; the warning stays and is tested on resvg's message format, and the integration test asserts text is never lost silently. Text without any font-family counts as generic for #10. The general max_megapixels limit also applies to trace sources before downscaling.
 - Step 17: _last_meaningful_line prefers the last 'error:' line and skips compiler-style code-frame lines; Typst's diagnostics end with a caret line that hid both the message and the linked-image fallback trigger.
+- Step 18: the trimesh worker returns warnings (e.g. 'Alle 2 objecten zijn samengevoegd') that the parent passes to ctx.warn; an empty mesh (not only an empty scene) gives 'bevat geen 3D-geometrie'.
 **Left unfinished:** Phases 4-5 (steps 18-25); test steps 26-29 (remaining: 3D samples, test_model3d, UI tests).
 **Notes for next session:** local machine has Chrome + Edge, no LibreOffice (office tests
 only run in the CI LibreOffice job). Use `.venv` (Python 3.12). Resume from the first

@@ -103,7 +103,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 - [x] 17 register `VectorConverter`
 
 **Phase 4 - 3D models**
-- [ ] 18 `converters/model3d.py` (#16)
+- [x] 18 `converters/model3d.py` (#16)
 - [ ] 19 register `Model3DConverter`
 
 **Phase 5 - packaging, CI, licenses, memory**
