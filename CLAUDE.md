@@ -111,7 +111,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 - [x] 21 `packaging/licenses/`, `THIRD_PARTY_LICENSES.md` (#20)
 - [x] 22 `ci.yml`: otool for Typst/resvg, LibreOffice job
 - [x] 23 `release.yml`: smoke test of the new routes
-- [ ] 24 `README.md`
+- [x] 24 `README.md`
 - [ ] 25 memory files, ADR-003
 
 **Tests (written in the phase they belong to)**

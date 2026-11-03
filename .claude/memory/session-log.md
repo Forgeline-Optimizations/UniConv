@@ -43,6 +43,7 @@
 - Step 21 (packaging/licenses/resvg-LICENSE-{MIT,APACHE}.txt from tag v0.49.0, THIRD_PARTY_LICENSES.md): Typst, resvg, img2pdf, pikepdf (+qpdf), vtracer, trimesh, SciPy, NetworkX, lxml with versions and checked source links; 'Detected, not bundled' section for LibreOffice/Chrome/Edge (#20)
 - Step 22 (.github/workflows/ci.yml): otool -L guard covers ffmpeg, ffprobe, typst, resvg; LibreOffice job (weekly + workflow_dispatch) was added early in phase 2 and is green on both OSes
 - Step 23 (.github/workflows/release.yml): frozen app converts md->pdf, png->pdf, svg->png, png->svg (child process), stl->glb (child process); no stray UniConv processes allowed (tasklist/pgrep); YAML validated; verified locally on the Windows build before writing
+- Step 24 (README.md): formats incl. SVG, Office sources, PDF targets, 3D; 'Better PDFs' (LibreOffice, Chrome/Edge); system requirements macOS 14+ (#8) and measured size (+~150 MB, Windows build 789 MB; plan estimated ~110 MB, #21); privacy exceptions (#22); new config keys; dev notes on vendor/, app env overrides, LibreOffice CI job; architecture with providers
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 - Step 9: palette frames become RGB/RGBA before img2pdf, and a frame's ICC profile is dropped when its colour space changed (same rule as the raster path, review #4).
@@ -54,6 +55,7 @@
 - Step 16: on Windows resvg falls back to an installed font when a family is missing (text drawn, no stderr), so review #9's silent loss only happens on font-less systems; the warning stays and is tested on resvg's message format, and the integration test asserts text is never lost silently. Text without any font-family counts as generic for #10. The general max_megapixels limit also applies to trace sources before downscaling.
 - Step 17: _last_meaningful_line prefers the last 'error:' line and skips compiler-style code-frame lines; Typst's diagnostics end with a caret line that hid both the message and the linked-image fallback trigger.
 - Step 18: the trimesh worker returns warnings (e.g. 'Alle 2 objecten zijn samengevoegd') that the parent passes to ctx.warn; an empty mesh (not only an empty scene) gives 'bevat geen 3D-geometrie'.
+- Step 24: README stays English (repo documentation language), so 'Betere PDF's' became 'Better PDFs'; size stated from the measured local build (+148 MB), not the plan's ~110 MB estimate.
 **Left unfinished:** Phase 5 (steps 20-25); step 26-28 boxes to tick once their remaining parts are checked (all test files exist).
 **Notes for next session:** local machine has Chrome + Edge, no LibreOffice (office tests
 only run in the CI LibreOffice job). Use `.venv` (Python 3.12). Resume from the first
