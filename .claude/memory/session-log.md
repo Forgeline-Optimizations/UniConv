@@ -37,6 +37,7 @@
 - Phase 3 done: VectorConverter (resvg, Typst, vtracer in run_isolated); 439 passed per OS; CI green https://github.com/Forgeline-Optimizations/UniConv/actions/runs/41558778800
 - Step 18 (converters/model3d.py): Model3DConverter, 7 formats, worker in run_isolated, merge/axes/texture loss hints (#16), worker returns warnings (merged N objects), empty mesh refused; tests: test_model3d_worker.py (2)
 - Step 19 (core/registry.py): Model3DConverter registered last; tests: test_model3d.py (7: merge warning, single-file glTF with data: buffers, OBJ without .mtl, axes hint #16, empty/garbage files, 3MF zip detected), 3D samples (box + sphere scene) in conftest, matrix now image 57 / data 30 / document 56 / media 66 / model3d 42; offscreen screenshot: five family buttons fit at 520 px; full suite passed
+- Step 29 (tests/ui/test_main_window.py): test_five_family_buttons, test_hint_when_no_targets (PPTX without LibreOffice -> status names LibreOffice), test_loss_hint_from_chosen_provider (SVG->JPG hint from VectorConverter); tests: 11 UI passed
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 - Step 9: palette frames become RGB/RGBA before img2pdf, and a frame's ICC profile is dropped when its colour space changed (same rule as the raster path, review #4).

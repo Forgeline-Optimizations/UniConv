@@ -118,7 +118,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 - [ ] 26 `conftest.py` + markers, samples, `registry_without()`
 - [ ] 27 unit tests
 - [ ] 28 integration tests
-- [ ] 29 UI tests
+- [x] 29 UI tests
 
 ## Milestone history
 - Sprint 0 - Project Initialization: memory workspace scaffolded from the plan. done
