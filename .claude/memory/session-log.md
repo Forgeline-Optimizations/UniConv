@@ -25,6 +25,7 @@
 - Step 9 (converters/image.py): image -> PDF via img2pdf, JPEG as-is, rest via PNG frames, multi-page, size check factored out (#1, #18); tests: 6 PDF tests in test_image.py (Flate, byte-identical JPEG, WebP alpha, 3-page GIF, EXIF portrait, CMYK/16-bit), full suite passed
 - Step 10 (scripts/fetch_binaries.py): Typst 0.15.1 + resvg 0.49.0 for both platforms, tar support via extractfile() (#19); all 4 plan hashes matched GitHub digests AND were re-verified by downloading both tags locally; tests: test_fetch_binaries.py (4) added
 - Step 10 follow-up: test caught extractfile() following a symlink member; script now checks getmember().isfile() first; test_fetch_binaries 4 passed
+- Step 11 (.claude/decisions/ADR-002-typst-resvg-and-detected-apps.md): pins, bundle-vs-detect rule, alternatives; tests: n/a (docs)
 **Decisions made:**
 - Steps 4+5 committed together: the new registry API breaks the old call sites, so a separate step-4 commit would be red. Additions beyond the plan: Registry.family_label(family) (UI needs the label of a family whose providers may all be unavailable) and a check that refuses registering the same provider class twice.
 - Step 9: palette frames become RGB/RGBA before img2pdf, and a frame's ICC profile is dropped when its colour space changed (same rule as the raster path, review #4).
