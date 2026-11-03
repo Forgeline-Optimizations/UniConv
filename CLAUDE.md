@@ -94,7 +94,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 - [x] 12 `core/tools.py` `cwd`, `converters/document.py` PDF via Typst (#25, #11, #12)
 
 **Phase 2 - Office and browser to PDF**
-- [ ] 13 `converters/office.py` + `ConversionTimeout` (#4, #5, #13, #14, #17)
+- [x] 13 `converters/office.py` + `ConversionTimeout` (#4, #5, #13, #14, #17)
 - [ ] 14 `converters/browser.py` (#15)
 - [ ] 15 registry order: Office and browser before Pandoc
 

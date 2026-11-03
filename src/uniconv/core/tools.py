@@ -11,7 +11,7 @@ from functools import cache
 from pathlib import Path
 
 from uniconv.core.converter import CancelToken
-from uniconv.core.errors import ConversionCancelled, ConversionError
+from uniconv.core.errors import ConversionCancelled, ConversionError, ConversionTimeout
 from uniconv.paths import install_dir, is_frozen
 
 # Without this a console window flashes up for every conversion in the windowed Windows build.
@@ -82,7 +82,7 @@ def run_tool(cmd: list[str], *, timeout_s: int, cancel: CancelToken,
             t_out.join(1)
             if cancel.cancelled:
                 raise ConversionCancelled("Conversie geannuleerd")
-            raise ConversionError(f"Conversie duurde langer dan {timeout_s} s en is gestopt")
+            raise ConversionTimeout(f"Conversie duurde langer dan {timeout_s} s en is gestopt")
         time.sleep(0.1)
     t_err.join()
     t_out.join()

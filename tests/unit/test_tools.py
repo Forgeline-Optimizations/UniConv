@@ -6,7 +6,7 @@ import pytest
 
 from uniconv.core import tools
 from uniconv.core.converter import CancelToken
-from uniconv.core.errors import ConversionCancelled, ConversionError
+from uniconv.core.errors import ConversionCancelled, ConversionError, ConversionTimeout
 
 PY = sys.executable
 
@@ -37,7 +37,7 @@ def test_nonzero_exit_reports_last_stderr_line():
 
 def test_timeout_kills_process_quickly():
     start = time.monotonic()
-    with pytest.raises(ConversionError, match="langer dan 1 s"):
+    with pytest.raises(ConversionTimeout, match="langer dan 1 s"):  # a ConversionError too
         tools.run_tool([PY, "-c", "import time; time.sleep(30)"], timeout_s=1,
                        cancel=CancelToken())
     assert time.monotonic() - start < 3
@@ -80,3 +80,7 @@ def test_cwd_is_used(tmp_path):
     tools.run_tool([PY, "-c", "import os; print(os.getcwd())"], timeout_s=30,
                    cancel=CancelToken(), on_stdout_line=lines.append, cwd=tmp_path)
     assert lines and lines[0].lower() == str(tmp_path).lower()
+
+
+def test_timeout_is_a_conversion_error():
+    assert issubclass(ConversionTimeout, ConversionError)
