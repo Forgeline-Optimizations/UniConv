@@ -43,6 +43,14 @@ _TEXT_SAMPLES = {
         r"\section{Titel}" "\nTekst.\n" r"\end{document}" "\n"
     ),
     "rtf": r"{\rtf1\ansi{\b Titel}\par Tekst met nadruk.\par}" "\n",
+    "svg": (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="120">'
+        '<defs><linearGradient id="g"><stop offset="0" stop-color="#e33"/>'
+        '<stop offset="1" stop-color="#33e"/></linearGradient></defs>'
+        '<rect width="240" height="120" fill="url(#g)"/>'
+        '<text x="20" y="75" font-size="40" font-family="Arial, sans-serif" fill="white">'
+        "UniConv</text></svg>\n"
+    ),
 }
 _PANDOC_SAMPLES = {"docx", "odt", "epub", "pptx"}
 # made by LibreOffice from a generated modern file: (filter, made from)

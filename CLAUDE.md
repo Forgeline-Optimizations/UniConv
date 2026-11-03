@@ -100,7 +100,7 @@ Running log: top entry of `.claude/memory/session-log.md`. Do not tag or merge t
 
 **Phase 3 - vector**
 - [x] 16 `converters/vector.py` + `encode_raster()` (#2, #3, #9, #10, #26)
-- [ ] 17 register `VectorConverter`
+- [x] 17 register `VectorConverter`
 
 **Phase 4 - 3D models**
 - [ ] 18 `converters/model3d.py` (#16)

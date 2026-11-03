@@ -95,3 +95,15 @@ def test_returns_when_a_grandchild_keeps_the_pipes_open():
     start = time.monotonic()
     tools.run_tool([PY, "-c", code], timeout_s=60, cancel=CancelToken())
     assert time.monotonic() - start < 10
+
+
+def test_error_line_wins_over_a_code_frame():
+    """Typst ends its diagnostics with a caret line; the user needs the 'error:' line."""
+    stderr = ("error: failed to load linked image foto.png in SVG (file not found)\n"
+              "  \u250c\u2500 in.svg:1:0\n  \u2502\n1 \u2502 <svg ...>\n  \u2502 ^^^^^^^^^^\n\n")
+    assert tools._last_meaningful_line(stderr).startswith("error: failed to load linked image")
+
+
+def test_noise_lines_are_skipped():
+    assert tools._last_meaningful_line("real problem\n  \u2502 ^^^^\n") == "real problem"
+    assert tools._last_meaningful_line("Bad input\nConversion failed!\n") == "Bad input"
